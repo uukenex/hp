@@ -483,7 +483,6 @@
 <div class="book-scene">
   <div class="book-container" id="bookContainer">
 
-    <!-- 페이지 1 : 커버 -->
     <div class="page" id="page-0">
       <div class="page-face p1-front">
         <div class="invite-frame"></div>
@@ -508,7 +507,6 @@
       </div>
     </div>
 
-    <!-- 페이지 2 : 사진 1~4 -->
     <div class="page" id="page-1">
       <div class="page-face photo-page">
         <div class="photo-page-label">✦ OUR MOMENTS ✦</div>
@@ -536,7 +534,6 @@
       </div>
     </div>
 
-    <!-- 페이지 3 : 사진 5~7 -->
     <div class="page" id="page-2">
       <div class="page-face photo-page">
         <div class="photo-page-label">✦ MORE MEMORIES ✦</div>
@@ -558,13 +555,12 @@
       </div>
     </div>
 
-    <!-- 페이지 4 : 프로포즈 -->
     <div class="page" id="page-3">
       <div class="page-face propose-front">
         <div class="invite-frame"></div>
         <div id="proposeMain">
           <div class="propose-icon">🗺️</div>
-          <div class="propose-title">나와 결혼해줄래?</div>
+          <div class="propose-title">나와 함께갈래?</div>
           <div class="propose-msg">
             지금 이시간도, 당신과 있어서<br><br>
             행복해<br>
