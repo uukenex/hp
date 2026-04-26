@@ -178,7 +178,14 @@
             align-items: center;
             justify-content: space-between;
             padding: 32px 36px 36px;
-            position: relative;
+            /* position: relative 제거 — page-face의 absolute를 유지해야 높이가 맞음 */
+        }
+
+        .p1-top {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
         }
 
         .p1-top {
@@ -353,14 +360,19 @@
         /* ===== 프로포즈 페이지 ===== */
         .propose-front {
             background: linear-gradient(155deg, #f6ebda 0%, #eddfc3 50%, #e5d3ad 100%);
+            /* position: relative 제거 — page-face의 absolute 유지 */
+            transition: background 100s linear;
+        }
+
+        #proposeMain {
+            position: absolute;
+            inset: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 0;
+            justify-content: space-evenly;
             text-align: center;
-            position: relative;
-            transition: background 100s linear;
+            padding: 32px 32px 36px;
         }
 
         #proposeMain {
@@ -438,12 +450,13 @@
         /* YES 응답 */
         .yes-response {
             display: none;
+            position: absolute;
+            inset: 0;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             gap: 20px;
-            width: 100%;
-            height: 100%;
+            text-align: center;
         }
         .totoro-img {
             width: 138px; height: 138px;
@@ -629,7 +642,7 @@
         dots.forEach(function (dt, i) {
             dt.className = 'dot' + (i === current ? ' active' : '');
         });
-        if (current === TOTAL - 1) noBtnActivate();
+        // No 버튼은 마우스 근접 시에만 활성화 (여기서 호출 X)
     }
 
     window.goNext = function () {
@@ -719,13 +732,25 @@
         requestAnimationFrame(nbTick);
     }
 
-    // 마우스 근접 → 반발력
+    // 마우스 근접 시: 미활성이면 활성화, 활성이면 반발력 적용
     document.addEventListener('mousemove', function (e) {
-        if (!nb.live || noBtn.style.display === 'none') return;
-        var cx   = nb.x + noBtn.offsetWidth  / 2;
-        var cy   = nb.y + noBtn.offsetHeight / 2;
-        var dx   = cx - e.clientX;
-        var dy   = cy - e.clientY;
+        if (current !== TOTAL - 1 || noBtn.style.display === 'none') return;
+
+        if (!nb.live) {
+            // 버튼이 아직 정지 상태 — 현재 렌더 위치로 거리 계산
+            var r0   = noBtn.getBoundingClientRect();
+            var cx0  = r0.left + r0.width  / 2;
+            var cy0  = r0.top  + r0.height / 2;
+            var d0   = Math.sqrt(Math.pow(e.clientX - cx0, 2) + Math.pow(e.clientY - cy0, 2));
+            if (d0 < 120) noBtnActivate();   // 120px 이내에 들어올 때만 시작
+            return;
+        }
+
+        // 이미 활성 — 반발력
+        var cx  = nb.x + noBtn.offsetWidth  / 2;
+        var cy  = nb.y + noBtn.offsetHeight / 2;
+        var dx  = cx - e.clientX;
+        var dy  = cy - e.clientY;
         var dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < 150 && dist > 0) {
             var f = (150 - dist) / 150 * 7;
