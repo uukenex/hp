@@ -102,8 +102,6 @@
             z-index: 2;
             width: min(380px, 92vw);
             height: min(610px, 88vh);
-            filter: drop-shadow(0 22px 64px rgba(90, 60, 20, 0.20))
-                    drop-shadow(0 5px 18px rgba(0,0,0,0.10));
         }
         .book-container {
             position: relative;
@@ -119,6 +117,7 @@
             transform-origin: left center;
             transform-style: preserve-3d;
             border-radius: 2px 16px 16px 2px;
+            box-shadow: 4px 4px 28px rgba(140,100,50,0.17), 10px 10px 48px rgba(0,0,0,0.09);
         }
         .page-face {
             position: absolute;
@@ -177,8 +176,16 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 30px 36px 26px;
+            justify-content: space-between;
+            padding: 32px 36px 36px;
             position: relative;
+        }
+
+        .p1-top {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
         }
 
         .p1-heart {
@@ -350,16 +357,25 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 34px 32px;
+            padding: 0;
             text-align: center;
             position: relative;
             transition: background 100s linear;
         }
 
+        #proposeMain {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-evenly;
+            padding: 32px 32px 36px;
+        }
+
         .propose-icon {
             font-size: 50px;
             animation: floatIcon 2.5s ease-in-out infinite;
-            margin-bottom: 14px;
         }
         @keyframes floatIcon {
             0%, 100% { transform: translateY(0); }
@@ -370,7 +386,6 @@
             font-size: 26px;
             color: #7a4f2e;
             font-weight: 600;
-            margin-bottom: 14px;
             line-height: 1.4;
         }
 
@@ -386,7 +401,6 @@
             color: #8b6040;
             line-height: 2.2;
             font-weight: 300;
-            margin-bottom: 30px;
         }
 
         .propose-btns { display: flex; gap: 16px; align-items: center; justify-content: center; }
@@ -426,7 +440,10 @@
             display: none;
             flex-direction: column;
             align-items: center;
-            gap: 16px;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            height: 100%;
         }
         .totoro-img {
             width: 138px; height: 138px;
@@ -466,13 +483,15 @@
     <div class="page" id="page-0">
       <div class="page-face p1-front">
         <div class="invite-frame"></div>
-        <div class="p1-heart">🎫</div>
-        <div class="p1-title">For You</div>
-        <div class="p1-subtitle">A Private Invitation</div>
-        <div class="p1-rule"><span class="p1-rule-gem">✦</span></div>
-        <div class="p1-quote">
-          지금 이 순간도,<br>
-          당신과 함께여서 행복합니다
+        <div class="p1-top">
+          <div class="p1-heart">🎫</div>
+          <div class="p1-title">For You</div>
+          <div class="p1-subtitle">A Private Invitation</div>
+          <div class="p1-rule"><span class="p1-rule-gem">✦</span></div>
+          <div class="p1-quote">
+            지금 이 순간도,<br>
+            당신과 함께여서 행복합니다
+          </div>
         </div>
         <div class="p1-form">
           <div>
