@@ -188,6 +188,13 @@
             width: 100%;
         }
 
+        .p1-top {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
         .p1-heart {
             font-size: 54px;
             animation: heartbeat 1.8s ease-in-out infinite;
@@ -365,6 +372,16 @@
             align-items: center;
             justify-content: space-evenly;
             text-align: center;
+            padding: 32px 32px 36px;
+        }
+
+        #proposeMain {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-evenly;
             padding: 32px 32px 36px;
         }
 
