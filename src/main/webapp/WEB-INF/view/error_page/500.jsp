@@ -8,13 +8,6 @@
 <title>Error!</title>
 </head>
 <body>
-
-	<!-- Drop Menu Header -->
-		<jsp:include page="/WEB-INF/view/nonsession/layout/dropMenu_header.jsp" />
-	<!-- Menu Bar Header -->
-		<jsp:include page="/WEB-INF/view/nonsession/layout/menubar_header.jsp" />
-		
-		
 	<!-- Error page body part -->
 	
 		<div id="page-wrapper" class="boardPage-Wrapper">

@@ -7,7 +7,7 @@
     <!--
         실제 테이블 구조:
         CREATE TABLE tuser_kakao (
-            user_seq         NUMBER PRIMARY KEY,       -- tuser_kakao_seq.NEXTVAL
+            user_seq         NUMBER PRIMARY KEY,      
             kakao_id         VARCHAR2(50) UNIQUE,
             nickname         VARCHAR2(100),
             insert_date      DATE DEFAULT SYSDATE,
