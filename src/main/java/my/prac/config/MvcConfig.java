@@ -13,10 +13,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
 @Configuration
-// 페이지호출에 대한 scan
-@ComponentScan({ "my.prac.api.user.controller", "my.prac.api.board.controller", "my.prac.api.test.controller",
-		"my.prac.api.games.controller", "my.prac.api.system.controller", "my.prac.api.loa.controller",
-		"my.prac.api.wedding.controller" })
+@ComponentScan({ "my.prac.api.wedding.controller", "my.prac.api.car.controller" })
 @EnableWebMvc
 public class MvcConfig extends WebMvcConfigurerAdapter {
 
@@ -76,6 +73,7 @@ public class MvcConfig extends WebMvcConfigurerAdapter {
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
 		registry.addInterceptor(new SessionInterceptor()).addPathPatterns("/session/**");
+		registry.addInterceptor(new CarSessionInterceptor()).addPathPatterns("/car/board/**");
 	}
 
 }

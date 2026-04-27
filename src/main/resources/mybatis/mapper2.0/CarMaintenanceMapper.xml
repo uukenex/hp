@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CarMaintenanceMapper">
+
+    <!--
+        DDL (Oracle):
+        CREATE TABLE CAR_MAINTENANCE (
+            ID            NUMBER          PRIMARY KEY,
+            KAKAO_ID      VARCHAR2(50)    NOT NULL,
+            KAKAO_NICKNAME VARCHAR2(100),
+            CAR_NAME      VARCHAR2(100),
+            CAR_NUMBER    VARCHAR2(20),
+            MAINTENANCE_DATE DATE,
+            MILEAGE       NUMBER(10),
+            MAINTENANCE_TYPE VARCHAR2(50),
+            DESCRIPTION   VARCHAR2(2000),
+            COST          NUMBER(15),
+            SHOP_NAME     VARCHAR2(200),
+            CREATED_AT    DATE DEFAULT SYSDATE,
+            UPDATED_AT    DATE
+        );
+        CREATE SEQUENCE CAR_MAINTENANCE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE;
+    -->
+
+    <select id="getList" parameterType="String" resultType="my.prac.core.car.dto.CarMaintenanceDto">
+        SELECT
+            ID,
+            KAKAO_ID,
+            KAKAO_NICKNAME,
+            CAR_NAME,
+            CAR_NUMBER,
+            TO_CHAR(MAINTENANCE_DATE, 'YYYY-MM-DD') AS MAINTENANCE_DATE,
+            MILEAGE,
+            MAINTENANCE_TYPE,
+            DESCRIPTION,
+            COST,
+            SHOP_NAME,
+            TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT
+        FROM CAR_MAINTENANCE
+        WHERE KAKAO_ID = #{kakaoId}
+        ORDER BY MAINTENANCE_DATE DESC, CREATED_AT DESC
+    </select>
+
+    <select id="getDetail" parameterType="int" resultType="my.prac.core.car.dto.CarMaintenanceDto">
+        SELECT
+            ID,
+            KAKAO_ID,
+            KAKAO_NICKNAME,
+            CAR_NAME,
+            CAR_NUMBER,
+            TO_CHAR(MAINTENANCE_DATE, 'YYYY-MM-DD') AS MAINTENANCE_DATE,
+            MILEAGE,
+            MAINTENANCE_TYPE,
+            DESCRIPTION,
+            COST,
+            SHOP_NAME,
+            TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT,
+            TO_CHAR(UPDATED_AT, 'YYYY-MM-DD HH24:MI') AS UPDATED_AT
+        FROM CAR_MAINTENANCE
+        WHERE ID = #{id}
+    </select>
+
+    <insert id="insert" parameterType="my.prac.core.car.dto.CarMaintenanceDto">
+        INSERT INTO CAR_MAINTENANCE (
+            ID, KAKAO_ID, KAKAO_NICKNAME, CAR_NAME, CAR_NUMBER,
+            MAINTENANCE_DATE, MILEAGE, MAINTENANCE_TYPE, DESCRIPTION,
+            COST, SHOP_NAME, CREATED_AT
+        ) VALUES (
+            CAR_MAINTENANCE_SEQ.NEXTVAL,
+            #{kakaoId},
+            #{kakaoNickname},
+            #{carName},
+            #{carNumber},
+            TO_DATE(#{maintenanceDate}, 'YYYY-MM-DD'),
+            #{mileage},
+            #{maintenanceType},
+            #{description},
+            #{cost},
+            #{shopName},
+            SYSDATE
+        )
+    </insert>
+
+    <update id="update" parameterType="my.prac.core.car.dto.CarMaintenanceDto">
+        UPDATE CAR_MAINTENANCE SET
+            CAR_NAME         = #{carName},
+            CAR_NUMBER       = #{carNumber},
+            MAINTENANCE_DATE = TO_DATE(#{maintenanceDate}, 'YYYY-MM-DD'),
+            MILEAGE          = #{mileage},
+            MAINTENANCE_TYPE = #{maintenanceType},
+            DESCRIPTION      = #{description},
+            COST             = #{cost},
+            SHOP_NAME        = #{shopName},
+            UPDATED_AT       = SYSDATE
+        WHERE ID = #{id}
+    </update>
+
+    <delete id="delete" parameterType="int">
+        DELETE FROM CAR_MAINTENANCE WHERE ID = #{id}
+    </delete>
+
+</mapper>
