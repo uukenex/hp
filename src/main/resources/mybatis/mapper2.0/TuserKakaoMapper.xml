@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="TuserKakaoMapper">
+
+    <!--
+        DDL (Oracle):
+        CREATE TABLE TUSER_KAKAO (
+            KAKAO_ID          VARCHAR2(50)   PRIMARY KEY,
+            NICKNAME          VARCHAR2(100),
+            PROFILE_IMAGE     VARCHAR2(500),
+            AUTO_LOGIN_TOKEN  VARCHAR2(100),
+            TOKEN_EXPIRE      DATE,
+            LAST_LOGIN        DATE,
+            CREATED_AT        DATE DEFAULT SYSDATE
+        );
+    -->
+
+    <select id="findByKakaoId" parameterType="String" resultType="my.prac.core.car.dto.TuserKakaoDto">
+        SELECT KAKAO_ID, NICKNAME, PROFILE_IMAGE, AUTO_LOGIN_TOKEN,
+               TO_CHAR(TOKEN_EXPIRE, 'YYYY-MM-DD HH24:MI:SS') AS TOKEN_EXPIRE,
+               TO_CHAR(LAST_LOGIN,   'YYYY-MM-DD HH24:MI:SS') AS LAST_LOGIN,
+               TO_CHAR(CREATED_AT,   'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT
+        FROM TUSER_KAKAO
+        WHERE KAKAO_ID = #{kakaoId}
+    </select>
+
+    <!-- 유효한 토큰(만료 미경과)으로 사용자 조회 -->
+    <select id="findByToken" parameterType="String" resultType="my.prac.core.car.dto.TuserKakaoDto">
+        SELECT KAKAO_ID, NICKNAME, PROFILE_IMAGE
+        FROM TUSER_KAKAO
+        WHERE AUTO_LOGIN_TOKEN = #{token}
+          AND TOKEN_EXPIRE > SYSDATE
+    </select>
+
+    <insert id="insert" parameterType="my.prac.core.car.dto.TuserKakaoDto">
+        INSERT INTO TUSER_KAKAO (
+            KAKAO_ID, NICKNAME, PROFILE_IMAGE,
+            AUTO_LOGIN_TOKEN, TOKEN_EXPIRE, LAST_LOGIN, CREATED_AT
+        ) VALUES (
+            #{kakaoId}, #{nickname}, #{profileImage},
+            #{autoLoginToken}, SYSDATE + 30, SYSDATE, SYSDATE
+        )
+    </insert>
+
+    <!-- 재로그인: 닉네임·프로필·토큰·만료일·최종로그인 갱신 -->
+    <update id="updateLogin" parameterType="my.prac.core.car.dto.TuserKakaoDto">
+        UPDATE TUSER_KAKAO SET
+            NICKNAME         = #{nickname},
+            PROFILE_IMAGE    = #{profileImage},
+            AUTO_LOGIN_TOKEN = #{autoLoginToken},
+            TOKEN_EXPIRE     = SYSDATE + 30,
+            LAST_LOGIN       = SYSDATE
+        WHERE KAKAO_ID = #{kakaoId}
+    </update>
+
+</mapper>
