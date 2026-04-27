@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
@@ -36,13 +37,11 @@ public class KakaoLoginController {
     @Value("${kakaoKey}")
     private String kakaoClientId;
 
-    @Value("${kakaoRedirectUri}")
-    private String redirectUri;
-
     private static final String KAKAO_AUTH_URL =
             "https://kauth.kakao.com/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=code";
     private static final String KAKAO_TOKEN_URL = "https://kauth.kakao.com/oauth/token";
     private static final String KAKAO_USER_URL  = "https://kapi.kakao.com/v2/user/me";
+    private static final String CALLBACK_PATH   = "/kakao/callback";
 
     @GetMapping("/car/login")
     public String loginPage() {
@@ -50,23 +49,25 @@ public class KakaoLoginController {
     }
 
     @GetMapping("/car/kakao/start")
-    public void kakaoStart(HttpServletResponse response) throws IOException {
+    public void kakaoStart(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String redirectUri = buildRedirectUri(request);
         String url = String.format(KAKAO_AUTH_URL, kakaoClientId, redirectUri);
         response.sendRedirect(url);
     }
 
-    /** 카카오 개발자 콘솔 Redirect URI: http://sub.dev-apc.com/kakao/callback */
     @GetMapping("/kakao/callback")
     public String kakaoCallback(@RequestParam(required = false) String code,
                                 @RequestParam(required = false) String error,
+                                HttpServletRequest request,
                                 HttpSession session) {
         if (error != null || code == null) {
             logger.warn("Kakao OAuth error: {}", error);
             return "redirect:/car/login?error=kakao";
         }
         try {
-            String accessToken = getKakaoAccessToken(code);
-            CarUserDto carUser   = getKakaoUserInfo(accessToken);
+            String redirectUri = buildRedirectUri(request);
+            String accessToken = getKakaoAccessToken(code, redirectUri);
+            CarUserDto carUser = getKakaoUserInfo(accessToken);
             session.setAttribute("carUser", carUser);
             return "redirect:/car/board/list";
         } catch (Exception e) {
@@ -83,7 +84,22 @@ public class KakaoLoginController {
 
     // ── 내부 메서드 ────────────────────────────────────────────────────────────
 
-    private String getKakaoAccessToken(String code) throws IOException {
+    /**
+     * 현재 요청 기반으로 redirect_uri 생성.
+     * 로컬(http://localhost:8082), 운영(http://sub.dev-apc.com) 모두 자동 대응.
+     */
+    private String buildRedirectUri(HttpServletRequest request) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(request.getScheme()).append("://").append(request.getServerName());
+        int port = request.getServerPort();
+        if (port != 80 && port != 443) {
+            sb.append(":").append(port);
+        }
+        sb.append(request.getContextPath()).append(CALLBACK_PATH);
+        return sb.toString();
+    }
+
+    private String getKakaoAccessToken(String code, String redirectUri) throws IOException {
         try (CloseableHttpClient client = HttpClients.createDefault()) {
             HttpPost httpPost = new HttpPost(KAKAO_TOKEN_URL);
 
