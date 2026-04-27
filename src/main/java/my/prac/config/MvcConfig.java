@@ -23,6 +23,9 @@ import my.prac.core.car.service.TuserKakaoService;
 @PropertySource("classpath:/safety/keys.properties")
 public class MvcConfig extends WebMvcConfigurerAdapter {
 
+	@Autowired
+	private TuserKakaoService tuserKakaoService;
+
 	@Bean
 	public static PropertySourcesPlaceholderConfigurer mvcPropertyConfigurer() {
 		return new PropertySourcesPlaceholderConfigurer();
