@@ -1,8 +1,11 @@
 package my.prac.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 import org.springframework.web.servlet.ViewResolver;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -12,10 +15,21 @@ import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
+import my.prac.core.car.service.TuserKakaoService;
+
 @Configuration
 @ComponentScan({ "my.prac.api.wedding.controller", "my.prac.api.car.controller" })
 @EnableWebMvc
+@PropertySource("classpath:/safety/keys.properties")
 public class MvcConfig extends WebMvcConfigurerAdapter {
+
+	@Bean
+	public static PropertySourcesPlaceholderConfigurer mvcPropertyConfigurer() {
+		return new PropertySourcesPlaceholderConfigurer();
+	}
+
+	@Autowired
+	private TuserKakaoService tuserKakaoService;
 
 	@Bean
 	public ViewResolver internalResourceViewResolver() {
@@ -73,7 +87,7 @@ public class MvcConfig extends WebMvcConfigurerAdapter {
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
 		registry.addInterceptor(new SessionInterceptor()).addPathPatterns("/session/**");
-		registry.addInterceptor(new CarSessionInterceptor()).addPathPatterns("/car/board/**");
+		registry.addInterceptor(new CarSessionInterceptor(tuserKakaoService)).addPathPatterns("/car/board/**");
 	}
 
 }
