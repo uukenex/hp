@@ -42,7 +42,7 @@ public class KakaoLoginController {
     private static final String KAKAO_TOKEN_URL = "https://kauth.kakao.com/oauth/token";
     private static final String KAKAO_USER_URL  = "https://kapi.kakao.com/v2/user/me";
     private static final String CALLBACK_PATH   = "/kakao/callback";
-    static final String AUTO_LOGIN_COOKIE        = "car_auto";
+    public static final String AUTO_LOGIN_COOKIE  = "car_auto";
     private static final int    COOKIE_MAX_AGE   = 60 * 60 * 24 * 30; // 30일
 
     @Value("${kakaoKey}")
@@ -87,7 +87,6 @@ public class KakaoLoginController {
             Cookie cookie = new Cookie(AUTO_LOGIN_COOKIE, saved.getAutoLoginToken());
             cookie.setMaxAge(COOKIE_MAX_AGE);
             cookie.setPath("/");
-            cookie.setHttpOnly(true);
             response.addCookie(cookie);
 
             return "redirect:/car/board/list";
