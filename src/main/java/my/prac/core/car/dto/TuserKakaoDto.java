@@ -5,13 +5,17 @@ import java.io.Serializable;
 public class TuserKakaoDto implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    private int    userSeq;
     private String kakaoId;
     private String nickname;
     private String profileImage;
     private String autoLoginToken;
     private String tokenExpire;
     private String lastLogin;
-    private String createdAt;
+    private String insertDate;
+
+    public int getUserSeq() { return userSeq; }
+    public void setUserSeq(int userSeq) { this.userSeq = userSeq; }
 
     public String getKakaoId() { return kakaoId; }
     public void setKakaoId(String kakaoId) { this.kakaoId = kakaoId; }
@@ -31,6 +35,6 @@ public class TuserKakaoDto implements Serializable {
     public String getLastLogin() { return lastLogin; }
     public void setLastLogin(String lastLogin) { this.lastLogin = lastLogin; }
 
-    public String getCreatedAt() { return createdAt; }
-    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+    public String getInsertDate() { return insertDate; }
+    public void setInsertDate(String insertDate) { this.insertDate = insertDate; }
 }
