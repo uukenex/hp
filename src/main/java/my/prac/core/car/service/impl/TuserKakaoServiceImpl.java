@@ -2,17 +2,18 @@ package my.prac.core.car.service.impl;
 
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.annotation.Resource;
+
 import org.springframework.stereotype.Service;
 
 import my.prac.core.car.dao.TuserKakaoDAO;
 import my.prac.core.car.dto.TuserKakaoDto;
 import my.prac.core.car.service.TuserKakaoService;
 
-@Service
+@Service("core.car.TuserKakaoService")
 public class TuserKakaoServiceImpl implements TuserKakaoService {
 
-    @Autowired
+    @Resource(name = "core.car.TuserKakaoDAO")
     private TuserKakaoDAO tuserKakaoDAO;
 
     @Override
