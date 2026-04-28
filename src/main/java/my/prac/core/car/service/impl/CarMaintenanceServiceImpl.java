@@ -2,17 +2,18 @@ package my.prac.core.car.service.impl;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.annotation.Resource;
+
 import org.springframework.stereotype.Service;
 
 import my.prac.core.car.dao.CarMaintenanceDAO;
 import my.prac.core.car.dto.CarMaintenanceDto;
 import my.prac.core.car.service.CarMaintenanceService;
 
-@Service
+@Service("core.car.CarMaintenanceService")
 public class CarMaintenanceServiceImpl implements CarMaintenanceService {
 
-    @Autowired
+    @Resource(name = "core.car.CarMaintenanceDAO")
     private CarMaintenanceDAO carMaintenanceDAO;
 
     @Override
