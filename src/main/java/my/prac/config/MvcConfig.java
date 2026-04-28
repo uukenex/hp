@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
@@ -29,6 +30,7 @@ public class MvcConfig extends WebMvcConfigurerAdapter {
 	}
 
 	@Autowired
+	@Lazy
 	private TuserKakaoService tuserKakaoService;
 
 	@Bean
