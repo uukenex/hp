@@ -126,6 +126,7 @@
             transform-style: preserve-3d;
             border-radius: 2px 16px 16px 2px;
             box-shadow: 4px 4px 28px rgba(140,100,50,0.17), 10px 10px 48px rgba(0,0,0,0.09);
+            will-change: transform; /* GPU 레이어 선점으로 3D 렌더링 안정화 */
         }
         .page-face {
             position: absolute;
@@ -207,6 +208,7 @@
             font-size: 54px;
             animation: heartbeat 1.8s ease-in-out infinite;
             margin-bottom: 12px;
+            will-change: transform; /* preserve-3d 내 독립 레이어 → 부모 레이어 무효화 방지 */
         }
         @keyframes heartbeat {
             0%, 100% { transform: scale(1); }
@@ -396,6 +398,7 @@
         .propose-icon {
             font-size: 50px;
             animation: floatIcon 2.5s ease-in-out infinite;
+            will-change: transform;
         }
         @keyframes floatIcon {
             0%, 100% { transform: translateY(0); }
@@ -670,8 +673,13 @@
         var pg = pages[current];
         pg.style.transition = 'transform 0.85s cubic-bezier(0.645,0.045,0.355,1)';
         pg.style.transform   = 'rotateY(-180deg)';
-        setTimeout(function () { pg.style.zIndex = '0'; }, 425);
-        setTimeout(function () { current++; updateUI(); busy = false; }, 850);
+        // 애니메이션 완료 후 z-index 낮춤 — 중간에 낮추면 다음 페이지가 조기 노출됨
+        setTimeout(function () {
+            pg.style.zIndex = '0';
+            current++;
+            updateUI();
+            busy = false;
+        }, 880);
     };
 
     window.goPrev = function () {
