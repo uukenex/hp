@@ -87,7 +87,7 @@ public class MvcConfig extends WebMvcConfigurerAdapter {
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
 		registry.addInterceptor(new SessionInterceptor()).addPathPatterns("/session/**");
-		registry.addInterceptor(new CarSessionInterceptor(tuserKakaoService)).addPathPatterns("/car/board/**");
+		registry.addInterceptor(new CarSessionInterceptor(tuserKakaoService)).addPathPatterns("/car/board/**", "/transport/**");
 	}
 
 }

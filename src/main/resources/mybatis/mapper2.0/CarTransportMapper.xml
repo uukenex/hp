@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CarTransportMapper">
+
+    <!--
+        DDL (Oracle) - 아래 SQL을 서버에서 직접 실행 후 사용:
+
+        CREATE TABLE CAR_TRANSPORT (
+            ID               NUMBER          PRIMARY KEY,
+            TRANSPORT_DATE   DATE            NOT NULL,
+            DRIVER_NAME      VARCHAR2(100),
+            COMPANY          VARCHAR2(100),
+            LOADING_POINT    VARCHAR2(200),
+            UNLOADING_POINT  VARCHAR2(200),
+            CAR_MODEL        VARCHAR2(100),
+            VEHICLE_NO       VARCHAR2(50),
+            SUPPLY_PRICE     NUMBER(15)      DEFAULT 0,
+            COMPANY_PRICE    NUMBER(15)      DEFAULT 0,
+            CREATED_AT       DATE            DEFAULT SYSDATE
+        );
+        CREATE SEQUENCE CAR_TRANSPORT_SEQ START WITH 1 INCREMENT BY 1 NOCACHE;
+    -->
+
+    <select id="getList" parameterType="map" resultType="my.prac.core.car.dto.CarTransportDto">
+        SELECT
+            ID,
+            TO_CHAR(TRANSPORT_DATE, 'YYYY-MM-DD') AS TRANSPORT_DATE,
+            DRIVER_NAME,
+            COMPANY,
+            LOADING_POINT,
+            UNLOADING_POINT,
+            CAR_MODEL,
+            VEHICLE_NO,
+            SUPPLY_PRICE,
+            COMPANY_PRICE,
+            TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT
+        FROM CAR_TRANSPORT
+        <where>
+            <if test="dateFrom != null and dateFrom != ''">
+                AND TRANSPORT_DATE >= TO_DATE(#{dateFrom}, 'YYYY-MM-DD')
+            </if>
+            <if test="dateTo != null and dateTo != ''">
+                AND TRANSPORT_DATE &lt;= TO_DATE(#{dateTo}, 'YYYY-MM-DD')
+            </if>
+            <if test="driverName != null and driverName != ''">
+                AND DRIVER_NAME LIKE '%' || #{driverName} || '%'
+            </if>
+            <if test="company != null and company != ''">
+                AND COMPANY LIKE '%' || #{company} || '%'
+            </if>
+        </where>
+        ORDER BY TRANSPORT_DATE DESC, ID DESC
+    </select>
+
+    <select id="getDetail" parameterType="int" resultType="my.prac.core.car.dto.CarTransportDto">
+        SELECT
+            ID,
+            TO_CHAR(TRANSPORT_DATE, 'YYYY-MM-DD') AS TRANSPORT_DATE,
+            DRIVER_NAME,
+            COMPANY,
+            LOADING_POINT,
+            UNLOADING_POINT,
+            CAR_MODEL,
+            VEHICLE_NO,
+            SUPPLY_PRICE,
+            COMPANY_PRICE,
+            TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT
+        FROM CAR_TRANSPORT
+        WHERE ID = #{id}
+    </select>
+
+    <insert id="insert" parameterType="my.prac.core.car.dto.CarTransportDto">
+        INSERT INTO CAR_TRANSPORT (
+            ID, TRANSPORT_DATE, DRIVER_NAME, COMPANY,
+            LOADING_POINT, UNLOADING_POINT, CAR_MODEL, VEHICLE_NO,
+            SUPPLY_PRICE, COMPANY_PRICE, CREATED_AT
+        ) VALUES (
+            CAR_TRANSPORT_SEQ.NEXTVAL,
+            TO_DATE(#{transportDate}, 'YYYY-MM-DD'),
+            #{driverName}, #{company},
+            #{loadingPoint}, #{unloadingPoint}, #{carModel}, #{vehicleNo},
+            #{supplyPrice}, #{companyPrice}, SYSDATE
+        )
+    </insert>
+
+    <update id="update" parameterType="my.prac.core.car.dto.CarTransportDto">
+        UPDATE CAR_TRANSPORT SET
+            TRANSPORT_DATE  = TO_DATE(#{transportDate}, 'YYYY-MM-DD'),
+            DRIVER_NAME     = #{driverName},
+            COMPANY         = #{company},
+            LOADING_POINT   = #{loadingPoint},
+            UNLOADING_POINT = #{unloadingPoint},
+            CAR_MODEL       = #{carModel},
+            VEHICLE_NO      = #{vehicleNo},
+            SUPPLY_PRICE    = #{supplyPrice},
+            COMPANY_PRICE   = #{companyPrice}
+        WHERE ID = #{id}
+    </update>
+
+    <delete id="delete" parameterType="int">
+        DELETE FROM CAR_TRANSPORT WHERE ID = #{id}
+    </delete>
+
+</mapper>
