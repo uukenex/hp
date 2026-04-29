@@ -12,7 +12,7 @@
         body {
             height: 100vh;
             height: 100dvh; /* 모바일: 주소창 제외한 실제 뷰포트 */
-            background: radial-gradient(ellipse at 35% 45%, #fdf8f0 0%, #f6ecdc 55%, #ede0c8 100%);
+            background: linear-gradient(135deg, #fdf8ef 0%, #f9f2e3 40%, #fdf5e6 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -56,9 +56,9 @@
             position: fixed;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(255, 255, 255, 0.55); /* 모바일: backdrop-filter 대신 불투명도 올림 */
-            border: 1px solid rgba(184, 146, 46, 0.25);
-            color: #9a7430;
+            background: rgba(180, 145, 90, 0.18);
+            border: 1px solid rgba(180, 145, 90, 0.35);
+            color: #8b6840;
             font-size: 22px;
             width: 42px;
             height: 42px;
@@ -67,18 +67,17 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.2s, border-color 0.2s, opacity 0.3s;
+            transition: background 0.25s, border-color 0.25s, opacity 0.3s;
             z-index: 100;
         }
         /* 데스크탑에서만 blur 적용 */
         @media (hover: hover) {
             .nav-btn {
-                background: rgba(255, 255, 255, 0.28);
-                backdrop-filter: blur(10px);
-                -webkit-backdrop-filter: blur(10px);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
             }
         }
-        .nav-btn:hover  { background: rgba(255,255,255,0.50); border-color: rgba(184,146,46,0.45); }
+        .nav-btn:hover  { background: rgba(180, 145, 90, 0.32); }
         .nav-btn:disabled { opacity: 0; pointer-events: none; }
         .nav-btn.prev { left: 14px; }
         .nav-btn.next { right: 14px; }
@@ -95,11 +94,11 @@
         .dot {
             width: 6px; height: 6px;
             border-radius: 50%;
-            background: rgba(184, 146, 46, 0.26);
-            transition: background 0.35s, transform 0.35s;
+            background: rgba(180, 145, 90, 0.30);
+            transition: background 0.3s, transform 0.3s;
         }
         .dot.active {
-            background: rgba(130, 92, 36, 0.85);
+            background: rgba(150, 100, 50, 0.80);
             transform: scale(1.55);
         }
 
@@ -138,7 +137,7 @@
         }
         .page-back {
             transform: rotateY(180deg);
-            background: linear-gradient(145deg, #f8f2e2 0%, #eee3c8 100%);
+            background: linear-gradient(145deg, #fdf7ea 0%, #f7edd8 100%);
         }
         .page-back-inner {
             width: 100%;
@@ -148,8 +147,8 @@
             justify-content: center;
             font-size: 56px;
             background-image: repeating-linear-gradient(
-                45deg, transparent, transparent 18px,
-                rgba(184,146,46,0.06) 18px, rgba(184,146,46,0.06) 36px
+                45deg, transparent, transparent 14px,
+                rgba(200,160,100,0.08) 14px, rgba(200,160,100,0.08) 28px
             );
         }
         /* 제본선 그림자 */
@@ -157,7 +156,7 @@
             content: '';
             position: absolute;
             top: 0; left: 0; bottom: 0; width: 18px;
-            background: linear-gradient(to right, rgba(120,85,40,0.11), transparent);
+            background: linear-gradient(to right, rgba(160,120,70,0.10), transparent);
             z-index: 2;
             pointer-events: none;
         }
@@ -166,7 +165,7 @@
         .invite-frame {
             position: absolute;
             inset: 16px;
-            border: 1px solid rgba(184, 146, 46, 0.32);
+            border: 1px solid rgba(140, 105, 55, 0.38);
             border-radius: 2px;
             pointer-events: none;
             z-index: 0;
@@ -175,13 +174,13 @@
             content: '';
             position: absolute;
             inset: 6px;
-            border: 1px solid rgba(184, 146, 46, 0.14);
+            border: 1px solid rgba(140, 105, 55, 0.20);
             border-radius: 1px;
         }
 
         /* ===== 커버 (1장) ===== */
         .p1-front {
-            background: linear-gradient(160deg, #f6ebda 0%, #eddfc3 50%, #e5d3ad 100%);
+            background: linear-gradient(160deg, #f8edd5 0%, #ede0c0 45%, #e4d0a8 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -219,14 +218,14 @@
             font-family: 'Dancing Script', cursive;
             font-size: 44px;
             color: #7a4f2e;
-            text-shadow: 0 2px 18px rgba(255,255,255,0.65);
+            text-shadow: 0 2px 16px rgba(255,255,255,0.8);
             margin-bottom: 4px;
             line-height: 1.1;
         }
 
         .p1-subtitle {
             font-size: 8.5px;
-            color: rgba(120, 80, 40, 0.50);
+            color: rgba(120, 80, 40, 0.65);
             letter-spacing: 4.5px;
             text-transform: uppercase;
             margin-bottom: 18px;
@@ -265,7 +264,7 @@
         .p1-label {
             display: block;
             font-size: 8.5px;
-            color: rgba(120, 80, 40, 0.56);
+            color: rgba(120, 80, 40, 0.70);
             letter-spacing: 2.5px;
             text-transform: uppercase;
             margin-bottom: 7px;
@@ -274,8 +273,8 @@
         .p1-input {
             width: 100%;
             padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.52);
-            border: 1px solid rgba(184, 146, 46, 0.26);
+            background: rgba(255, 255, 255, 0.70);
+            border: 1px solid rgba(180, 140, 80, 0.30);
             border-radius: 6px;
             color: #6b4c2c;
             font-size: 13px;
@@ -284,15 +283,15 @@
             transition: border-color 0.3s, background 0.3s;
         }
         .p1-input:focus {
-            border-color: rgba(184, 146, 46, 0.52);
-            background: rgba(255, 255, 255, 0.78);
+            border-color: rgba(180, 140, 80, 0.60);
+            background: rgba(255, 255, 255, 0.90);
         }
-        .p1-input::placeholder { color: rgba(150, 110, 65, 0.30); font-size: 12px; }
+        .p1-input::placeholder { color: rgba(140, 100, 60, 0.35); font-size: 12px; }
 
         .p1-btn {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #c49668, #9a7040);
+            background: linear-gradient(135deg, #c09060, #9a7040);
             border: none;
             border-radius: 6px;
             color: rgba(255,255,255,0.94);
@@ -319,7 +318,7 @@
 
         /* ===== 사진 페이지 ===== */
         .photo-page {
-            background: linear-gradient(150deg, #fefaf4 0%, #f8f2e5 50%, #f3ecd7 100%);
+            background: linear-gradient(150deg, #fefaf2 0%, #f8f1e2 50%, #f5edd6 100%);
             padding: 14px 18px 10px;
             display: flex;
             flex-direction: column;
@@ -365,11 +364,11 @@
             text-align: center;
             letter-spacing: 0.3px;
         }
-        .photo-deco { text-align: center; font-size: 13px; color: rgba(184,146,46,0.50); line-height: 1; }
+        .photo-deco { text-align: center; font-size: 13px; color: #c8a870; line-height: 1; }
 
         /* ===== 프로포즈 페이지 ===== */
         .propose-front {
-            background: linear-gradient(155deg, #f6ebda 0%, #eddfc3 50%, #e5d3ad 100%);
+            background: linear-gradient(155deg, #f8edd5 0%, #ede0c0 45%, #e4d0a8 100%);
             /* position: relative 제거 — page-face의 absolute 유지 */
             transition: background 100s linear;
         }
@@ -436,7 +435,7 @@
 
         .btn-yes {
             padding: 13px 32px;
-            background: linear-gradient(135deg, #c49668, #9a7040);
+            background: linear-gradient(135deg, #c09060, #9a7040);
             border: none;
             border-radius: 50px;
             color: rgba(255,255,255,0.94);
@@ -457,9 +456,9 @@
         .btn-no {
             padding: 11px 22px;
             background: transparent;
-            border: 1px solid rgba(184,146,46,0.42);
+            border: 2px solid #c8a870;
             border-radius: 50px;
-            color: rgba(155,115,58,0.78);
+            color: #a08050;
             font-size: 13px;
             font-family: 'Noto Serif KR', serif;
             cursor: pointer;
@@ -504,7 +503,7 @@
         #loadingScreen {
             position: fixed;
             inset: 0;
-            background: radial-gradient(ellipse at 35% 45%, #fdf8f0 0%, #f6ecdc 55%, #ede0c8 100%);
+            background: linear-gradient(135deg, #fdf8ef 0%, #f9f2e3 40%, #fdf5e6 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
