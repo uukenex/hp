@@ -56,9 +56,7 @@
             position: fixed;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(255, 255, 255, 0.28);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.55); /* 모바일: backdrop-filter 대신 불투명도 올림 */
             border: 1px solid rgba(184, 146, 46, 0.25);
             color: #9a7430;
             font-size: 22px;
@@ -71,6 +69,14 @@
             justify-content: center;
             transition: background 0.2s, border-color 0.2s, opacity 0.3s;
             z-index: 100;
+        }
+        /* 데스크탑에서만 blur 적용 */
+        @media (hover: hover) {
+            .nav-btn {
+                background: rgba(255, 255, 255, 0.28);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+            }
         }
         .nav-btn:hover  { background: rgba(255,255,255,0.50); border-color: rgba(184,146,46,0.45); }
         .nav-btn:disabled { opacity: 0; pointer-events: none; }
@@ -608,9 +614,10 @@
 
 <script>
 (function () {
-    // ===== 파티클 =====
+    // ===== 파티클 (모바일은 수 줄여 GPU 부하 감소) =====
+    var isMobile = !window.matchMedia('(hover: hover)').matches;
     var pc = document.getElementById('particles');
-    for (var i = 0; i < 20; i++) {
+    for (var i = 0; i < (isMobile ? 6 : 20); i++) {
         var p  = document.createElement('div');
         p.className = 'particle';
         var w  = Math.random() * 10 + 4;
@@ -796,8 +803,9 @@
         requestAnimationFrame(nbTick);
     }
 
-    // 마우스 근접 시: 미활성이면 활성화, 활성이면 반발력 적용
+    // 마우스 근접 시: 데스크탑 전용 (모바일 합성 이벤트 차단)
     document.addEventListener('mousemove', function (e) {
+        if (isMobile) return; // 터치 기기에서 합성 mousemove 무시
         if (current !== TOTAL - 1 || noBtn.style.display === 'none') return;
 
         if (!nb.live) {
