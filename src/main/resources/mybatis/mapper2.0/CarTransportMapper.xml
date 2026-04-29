@@ -3,45 +3,6 @@
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="my.prac.core.car.dao.CarTransportDAO">
-
-    <!--
-        DDL (Oracle) - 아래 SQL을 서버에서 직접 실행 후 사용:
-
-        -- 운송 메인 테이블
-        CREATE TABLE TCAR_TRANSPORT (
-            ID               NUMBER          PRIMARY KEY,
-            TRANSPORT_DATE   DATE            NOT NULL,
-            DRIVER_NAME      VARCHAR2(100),
-            COMPANY          VARCHAR2(100),
-            LOADING_POINT    VARCHAR2(200),
-            UNLOADING_POINT  VARCHAR2(200),
-            CAR_MODEL        VARCHAR2(100),
-            VEHICLE_NO       VARCHAR2(50),
-            SUPPLY_PRICE     NUMBER(15)      DEFAULT 0,
-            COMPANY_PRICE    NUMBER(15)      DEFAULT 0,
-            CREATED_AT       DATE            DEFAULT SYSDATE
-        );
-        CREATE SEQUENCE TCAR_TRANSPORT_SEQ START WITH 1 INCREMENT BY 1 NOCACHE;
-
-        -- 장표(첨부파일) 테이블
-        CREATE TABLE TCAR_TRANSPORT_FILE (
-            FILE_ID         NUMBER          PRIMARY KEY,
-            TRANSPORT_ID    NUMBER          NOT NULL,
-            ORIGINAL_NAME   VARCHAR2(500)   NOT NULL,
-            SAVED_NAME      VARCHAR2(500)   NOT NULL,
-            FILE_PATH       VARCHAR2(1000),
-            FILE_SIZE       NUMBER(15)      DEFAULT 0,
-            FILE_EXT        VARCHAR2(20),
-            CREATED_AT      DATE            DEFAULT SYSDATE,
-            CONSTRAINT FK_TCAR_TRANSPORT_FILE
-                FOREIGN KEY (TRANSPORT_ID) REFERENCES TCAR_TRANSPORT(ID)
-        );
-        CREATE SEQUENCE TCAR_TRANSPORT_FILE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE;
-
-        -- 기존 CAR_TRANSPORT 데이터 이관 (필요 시)
-        -- INSERT INTO TCAR_TRANSPORT SELECT * FROM CAR_TRANSPORT;
-    -->
-
     <!-- ==================== 운송 CRUD ==================== -->
 
     <select id="getList" parameterType="map" resultType="my.prac.core.car.dto.CarTransportDto">
