@@ -7,38 +7,42 @@
 <title>운송 기록 등록</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Malgun Gothic', sans-serif; background: #f0f2f5; font-size: 13px; }
+  body { font-family: 'Apple SD Gothic Neo','Malgun Gothic', sans-serif; background: #f0f2f5; font-size: 13px; }
 
   .top-bar {
     background: #1e3a5f;
     color: #fff;
-    padding: 12px 20px;
+    padding: 0 16px;
+    height: 52px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
-  .top-bar h1 { font-size: 17px; font-weight: 700; }
+  .top-bar h1 { font-size: 16px; font-weight: 700; }
   .back-btn {
-    color: rgba(255,255,255,0.7);
+    color: rgba(255,255,255,0.75);
     text-decoration: none;
-    font-size: 12px;
+    font-size: 13px;
     margin-left: auto;
+    padding: 6px 0 6px 16px; /* 터치 영역 확보 */
   }
   .back-btn:hover { color: #fff; }
 
-  .container { padding: 20px; max-width: 760px; margin: 0 auto; }
+  .container { padding: 16px 14px; max-width: 760px; margin: 0 auto; }
 
   .form-card {
     background: #fff;
     border: 1px solid #dde1e7;
-    border-radius: 10px;
-    padding: 24px;
+    border-radius: 12px;
+    padding: 20px;
   }
   .form-card h2 {
     font-size: 15px;
     font-weight: 700;
     color: #1e3a5f;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
     padding-bottom: 12px;
     border-bottom: 2px solid #1e3a5f;
   }
@@ -48,47 +52,76 @@
     grid-template-columns: 1fr 1fr;
     gap: 14px;
   }
-  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
   .form-group.full { grid-column: 1 / -1; }
-  .form-group label { font-size: 12px; font-weight: 600; color: #555; }
+  .form-group label { font-size: 12px; font-weight: 700; color: #444; }
   .form-group input, .form-group select {
     border: 1px solid #ccc;
-    border-radius: 5px;
-    padding: 8px 10px;
-    font-size: 13px;
+    border-radius: 8px;
+    padding: 11px 12px;
+    font-size: 14px;
     transition: border-color 0.15s;
+    -webkit-appearance: none;
   }
   .form-group input:focus, .form-group select:focus {
     outline: none;
     border-color: #1e3a5f;
+    box-shadow: 0 0 0 3px rgba(30,58,95,0.10);
+  }
+  .price-hint { font-size: 11px; color: #999; }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #888;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin: 18px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #eee;
+    grid-column: 1 / -1;
   }
 
-  .price-hint { font-size: 11px; color: #888; margin-top: 2px; }
-
   .btn-row {
-    margin-top: 22px;
+    margin-top: 24px;
     display: flex;
     gap: 10px;
     justify-content: flex-end;
   }
   .btn {
-    padding: 9px 22px;
+    padding: 12px 24px;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
+    touch-action: manipulation;
   }
   .btn-submit { background: #1e3a5f; color: #fff; }
   .btn-cancel { background: #eee; color: #555; }
-  .btn-submit:hover { background: #163060; }
+  .btn-submit:active { background: #163060; }
+
+  /* ===== 모바일 ===== */
+  @media (max-width: 600px) {
+    .container { padding: 10px 10px; }
+    .form-card { padding: 16px; border-radius: 10px; }
+    .form-grid { grid-template-columns: 1fr; gap: 12px; }
+    .form-group.full { grid-column: 1; }
+    .form-group input, .form-group select {
+      padding: 13px 14px;
+      font-size: 16px; /* iOS 줌 방지: 16px 이상 */
+      border-radius: 10px;
+    }
+    .btn-row { flex-direction: column-reverse; }
+    .btn { width: 100%; padding: 15px; font-size: 16px; text-align: center; }
+  }
 </style>
 </head>
 <body>
 
 <div class="top-bar">
-  <h1>&#x1F697; 운송 기록 등록</h1>
-  <a class="back-btn" href="${pageContext.request.contextPath}/transport/list">← 목록으로</a>
+  <h1>🚚 운송 기록 등록</h1>
+  <a class="back-btn" href="${pageContext.request.contextPath}/transport/list">← 목록</a>
 </div>
 
 <div class="container">
@@ -96,6 +129,8 @@
     <h2>새 운송 기록 입력</h2>
     <form method="post" action="${pageContext.request.contextPath}/transport/write">
       <div class="form-grid">
+
+        <div class="section-label">기본 정보</div>
 
         <div class="form-group">
           <label>날짜 *</label>
@@ -117,6 +152,8 @@
           <input type="text" name="carModel" placeholder="예) 쏘렌토, 투싼" maxlength="100">
         </div>
 
+        <div class="section-label">운송 경로</div>
+
         <div class="form-group">
           <label>상차 위치 *</label>
           <input type="text" name="loadingPoint" placeholder="상차지 주소" required maxlength="200">
@@ -128,19 +165,21 @@
         </div>
 
         <div class="form-group full">
-          <label>차대번호</label>
-          <input type="text" name="vehicleNo" placeholder="차대번호 (VIN)" maxlength="50">
+          <label>차대번호 (VIN)</label>
+          <input type="text" name="vehicleNo" placeholder="차대번호" maxlength="50">
         </div>
+
+        <div class="section-label">금액</div>
 
         <div class="form-group">
           <label>공급가 (원)</label>
-          <input type="number" name="supplyPrice" placeholder="0" min="0" value="0">
+          <input type="number" name="supplyPrice" placeholder="0" min="0" value="0" inputmode="numeric">
           <span class="price-hint">기사님에게 지급하는 금액</span>
         </div>
 
         <div class="form-group">
           <label>회사공급가 (원)</label>
-          <input type="number" name="companyPrice" placeholder="0" min="0" value="0">
+          <input type="number" name="companyPrice" placeholder="0" min="0" value="0" inputmode="numeric">
           <span class="price-hint">고객사에 청구하는 금액</span>
         </div>
 
