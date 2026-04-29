@@ -415,7 +415,13 @@
             font-weight: 300;
         }
 
-        .propose-btns { display: flex; gap: 16px; align-items: center; justify-content: center; }
+        .propose-btns {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px; /* noBtn이 빠져도 높이 고정 */
+        }
 
         .btn-yes {
             padding: 13px 32px;
@@ -429,6 +435,8 @@
             cursor: pointer;
             box-shadow: 0 5px 20px rgba(154,112,64,0.40), inset 0 1px 0 rgba(255,255,255,0.16);
             transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s;
+            flex-shrink: 0; /* flex에서 크기 고정 */
+            flex-grow: 0;
         }
         .btn-yes:hover {
             transform: scale(1.07);
@@ -445,6 +453,8 @@
             font-family: 'Noto Serif KR', serif;
             cursor: pointer;
             white-space: nowrap;
+            flex-shrink: 0; /* flex에서 크기 고정 */
+            flex-grow: 0;
         }
 
         /* YES 응답 */
@@ -694,6 +704,8 @@
         var ang  = Math.random() * Math.PI * 2;
         nb.vx    = Math.cos(ang) * 2.8;
         nb.vy    = Math.sin(ang) * 2.8;
+        noBtn.style.width      = noBtn.offsetWidth  + 'px'; // 너비 고정 (flex 이탈 후 리플로 방지)
+        noBtn.style.height     = noBtn.offsetHeight + 'px'; // 높이 고정
         noBtn.style.position   = 'fixed';
         noBtn.style.transition = 'none';
         noBtn.style.margin     = '0';
@@ -702,6 +714,52 @@
         noBtn.style.top        = nb.y + 'px';
         nb.live = true;
         requestAnimationFrame(nbTick);
+    }
+
+    // 모바일: 페이지 안에서 살짝 도망
+    function mobileDodge() {
+        if (!noBtn || noBtn.style.display === 'none') return;
+        var front = document.getElementById('proposeFront');
+        var fr    = front.getBoundingClientRect();
+        var pad   = 20;
+
+        if (!nb.live) {
+            // 처음 터치: 현재 위치 기록 후 fixed로 전환
+            var r = noBtn.getBoundingClientRect();
+            nb.x  = r.left;
+            nb.y  = r.top;
+            noBtn.style.width    = noBtn.offsetWidth  + 'px';
+            noBtn.style.height   = noBtn.offsetHeight + 'px';
+            noBtn.style.position = 'fixed';
+            noBtn.style.margin   = '0';
+            noBtn.style.zIndex   = '9998';
+            noBtn.style.left     = nb.x + 'px';
+            noBtn.style.top      = nb.y + 'px';
+            nb.live = true;
+        }
+
+        var bw   = noBtn.offsetWidth;
+        var bh   = noBtn.offsetHeight;
+        var maxX = fr.left + fr.width  - bw  - pad;
+        var maxY = fr.top  + fr.height - bh  - pad;
+        var minX = fr.left + pad;
+        var minY = fr.top  + pad;
+
+        // 현재 위치와 너무 가까우면 다시 뽑기
+        var newX, newY, tries = 0;
+        do {
+            newX = minX + Math.random() * (maxX - minX);
+            newY = minY + Math.random() * (maxY - minY);
+            tries++;
+        } while (tries < 10 && Math.abs(newX - nb.x) < 40 && Math.abs(newY - nb.y) < 40);
+
+        noBtn.style.transition = 'left 0.22s ease-out, top 0.22s ease-out';
+        noBtn.style.left = newX + 'px';
+        noBtn.style.top  = newY + 'px';
+        nb.x = newX;
+        nb.y = newY;
+
+        setTimeout(function () { noBtn.style.transition = 'none'; }, 240);
     }
 
     function nbTick() {
@@ -759,8 +817,13 @@
         }
     });
 
-    noBtn.addEventListener('touchstart', function (e) { e.preventDefault(); }, { passive: false });
-    noBtn.addEventListener('click',       function (e) { e.preventDefault(); });
+    noBtn.addEventListener('touchstart', function (e) {
+        e.preventDefault();
+        e.stopPropagation(); // 스와이프 페이지 전환 방지
+        if (current !== TOTAL - 1) return;
+        mobileDodge();
+    }, { passive: false });
+    noBtn.addEventListener('click', function (e) { e.preventDefault(); });
 
     // ===== YES =====
     window.onYes = function () {
