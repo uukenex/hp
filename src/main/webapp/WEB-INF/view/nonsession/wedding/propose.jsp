@@ -10,7 +10,8 @@
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            min-height: 100vh;
+            height: 100vh;
+            height: 100dvh; /* 모바일: 주소창 제외한 실제 뷰포트 */
             background: radial-gradient(ellipse at 35% 45%, #fdf8f0 0%, #f6ecdc 55%, #ede0c8 100%);
             display: flex;
             align-items: center;
@@ -101,7 +102,8 @@
             position: relative;
             z-index: 2;
             width: min(380px, 92vw);
-            height: min(610px, 88vh);
+            height: min(570px, calc(100vh - 80px));   /* 폴백 */
+            height: min(570px, calc(100dvh - 80px)); /* dvh 지원 시 override */
         }
         .book-container {
             position: relative;
@@ -310,10 +312,10 @@
         /* ===== 사진 페이지 ===== */
         .photo-page {
             background: linear-gradient(150deg, #fefaf4 0%, #f8f2e5 50%, #f3ecd7 100%);
-            padding: 22px 18px 14px;
+            padding: 14px 18px 10px;
             display: flex;
             flex-direction: column;
-            gap: 9px;
+            gap: 7px;
         }
         .photo-page-label {
             text-align: center;
@@ -716,50 +718,54 @@
         requestAnimationFrame(nbTick);
     }
 
-    // 모바일: 페이지 안에서 살짝 도망
+    // 모바일: transform 기반 도망 (GPU 합성 → 깜박임 없음)
     function mobileDodge() {
         if (!noBtn || noBtn.style.display === 'none') return;
         var front = document.getElementById('proposeFront');
         var fr    = front.getBoundingClientRect();
         var pad   = 20;
+        var bw    = noBtn.offsetWidth;
+        var bh    = noBtn.offsetHeight;
 
-        if (!nb.live) {
-            // 처음 터치: 현재 위치 기록 후 fixed로 전환
-            var r = noBtn.getBoundingClientRect();
-            nb.x  = r.left;
-            nb.y  = r.top;
-            noBtn.style.width    = noBtn.offsetWidth  + 'px';
-            noBtn.style.height   = noBtn.offsetHeight + 'px';
-            noBtn.style.position = 'fixed';
-            noBtn.style.margin   = '0';
-            noBtn.style.zIndex   = '9998';
-            noBtn.style.left     = nb.x + 'px';
-            noBtn.style.top      = nb.y + 'px';
+        if (!nb.mobileInit) {
+            // 처음: left=0,top=0 고정 후 translate로 현재 위치 표현
+            var r    = noBtn.getBoundingClientRect();
+            nb.mtx   = r.left;
+            nb.mty   = r.top;
+            noBtn.style.width      = bw + 'px';
+            noBtn.style.height     = bh + 'px';
+            noBtn.style.position   = 'fixed';
+            noBtn.style.left       = '0';
+            noBtn.style.top        = '0';
+            noBtn.style.margin     = '0';
+            noBtn.style.zIndex     = '9998';
+            noBtn.style.willChange = 'transform';
+            noBtn.style.transition = 'none';
+            noBtn.style.transform  = 'translate3d(' + Math.round(nb.mtx) + 'px,' + Math.round(nb.mty) + 'px,0)';
+            nb.mobileInit = true;
             nb.live = true;
         }
 
-        var bw   = noBtn.offsetWidth;
-        var bh   = noBtn.offsetHeight;
-        var maxX = fr.left + fr.width  - bw  - pad;
-        var maxY = fr.top  + fr.height - bh  - pad;
-        var minX = fr.left + pad;
-        var minY = fr.top  + pad;
+        // proposeFront 안의 랜덤 위치 (translate 목표값 = 화면 좌표)
+        var minTx = fr.left + pad;
+        var maxTx = fr.left + fr.width  - bw - pad;
+        var minTy = fr.top  + pad;
+        var maxTy = fr.top  + fr.height - bh - pad;
 
-        // 현재 위치와 너무 가까우면 다시 뽑기
-        var newX, newY, tries = 0;
+        var newTx, newTy, tries = 0;
         do {
-            newX = minX + Math.random() * (maxX - minX);
-            newY = minY + Math.random() * (maxY - minY);
+            newTx = minTx + Math.random() * (maxTx - minTx);
+            newTy = minTy + Math.random() * (maxTy - minTy);
             tries++;
-        } while (tries < 10 && Math.abs(newX - nb.x) < 40 && Math.abs(newY - nb.y) < 40);
+        } while (tries < 10 && Math.abs(newTx - nb.mtx) < 50 && Math.abs(newTy - nb.mty) < 50);
 
-        noBtn.style.transition = 'left 0.22s ease-out, top 0.22s ease-out';
-        noBtn.style.left = newX + 'px';
-        noBtn.style.top  = newY + 'px';
-        nb.x = newX;
-        nb.y = newY;
+        // transform만 변경 — layout/paint 없이 GPU 합성
+        noBtn.style.transition = 'transform 0.2s ease-out';
+        noBtn.style.transform  = 'translate3d(' + Math.round(newTx) + 'px,' + Math.round(newTy) + 'px,0)';
+        nb.mtx = newTx;
+        nb.mty = newTy;
 
-        setTimeout(function () { noBtn.style.transition = 'none'; }, 240);
+        setTimeout(function () { noBtn.style.transition = 'none'; }, 220);
     }
 
     function nbTick() {
