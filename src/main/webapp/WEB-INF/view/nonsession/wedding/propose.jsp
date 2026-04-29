@@ -10,7 +10,8 @@
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            min-height: 100vh;
+            height: 100vh;
+            height: 100dvh; /* 모바일: 주소창 제외한 실제 뷰포트 */
             background: radial-gradient(ellipse at 35% 45%, #fdf8f0 0%, #f6ecdc 55%, #ede0c8 100%);
             display: flex;
             align-items: center;
@@ -55,9 +56,7 @@
             position: fixed;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(255, 255, 255, 0.28);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.55); /* 모바일: backdrop-filter 대신 불투명도 올림 */
             border: 1px solid rgba(184, 146, 46, 0.25);
             color: #9a7430;
             font-size: 22px;
@@ -70,6 +69,14 @@
             justify-content: center;
             transition: background 0.2s, border-color 0.2s, opacity 0.3s;
             z-index: 100;
+        }
+        /* 데스크탑에서만 blur 적용 */
+        @media (hover: hover) {
+            .nav-btn {
+                background: rgba(255, 255, 255, 0.28);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+            }
         }
         .nav-btn:hover  { background: rgba(255,255,255,0.50); border-color: rgba(184,146,46,0.45); }
         .nav-btn:disabled { opacity: 0; pointer-events: none; }
@@ -101,7 +108,8 @@
             position: relative;
             z-index: 2;
             width: min(380px, 92vw);
-            height: min(610px, 88vh);
+            height: min(570px, calc(100vh - 80px));   /* 폴백 */
+            height: min(570px, calc(100dvh - 80px)); /* dvh 지원 시 override */
         }
         .book-container {
             position: relative;
@@ -118,6 +126,7 @@
             transform-style: preserve-3d;
             border-radius: 2px 16px 16px 2px;
             box-shadow: 4px 4px 28px rgba(140,100,50,0.17), 10px 10px 48px rgba(0,0,0,0.09);
+            will-change: transform; /* GPU 레이어 선점으로 3D 렌더링 안정화 */
         }
         .page-face {
             position: absolute;
@@ -199,6 +208,7 @@
             font-size: 54px;
             animation: heartbeat 1.8s ease-in-out infinite;
             margin-bottom: 12px;
+            will-change: transform; /* preserve-3d 내 독립 레이어 → 부모 레이어 무효화 방지 */
         }
         @keyframes heartbeat {
             0%, 100% { transform: scale(1); }
@@ -310,10 +320,10 @@
         /* ===== 사진 페이지 ===== */
         .photo-page {
             background: linear-gradient(150deg, #fefaf4 0%, #f8f2e5 50%, #f3ecd7 100%);
-            padding: 22px 18px 14px;
+            padding: 14px 18px 10px;
             display: flex;
             flex-direction: column;
-            gap: 9px;
+            gap: 7px;
         }
         .photo-page-label {
             text-align: center;
@@ -388,6 +398,7 @@
         .propose-icon {
             font-size: 50px;
             animation: floatIcon 2.5s ease-in-out infinite;
+            will-change: transform;
         }
         @keyframes floatIcon {
             0%, 100% { transform: translateY(0); }
@@ -415,7 +426,13 @@
             font-weight: 300;
         }
 
-        .propose-btns { display: flex; gap: 16px; align-items: center; justify-content: center; }
+        .propose-btns {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px; /* noBtn이 빠져도 높이 고정 */
+        }
 
         .btn-yes {
             padding: 13px 32px;
@@ -429,6 +446,8 @@
             cursor: pointer;
             box-shadow: 0 5px 20px rgba(154,112,64,0.40), inset 0 1px 0 rgba(255,255,255,0.16);
             transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s;
+            flex-shrink: 0; /* flex에서 크기 고정 */
+            flex-grow: 0;
         }
         .btn-yes:hover {
             transform: scale(1.07);
@@ -445,6 +464,8 @@
             font-family: 'Noto Serif KR', serif;
             cursor: pointer;
             white-space: nowrap;
+            flex-shrink: 0; /* flex에서 크기 고정 */
+            flex-grow: 0;
         }
 
         /* YES 응답 */
@@ -596,9 +617,10 @@
 
 <script>
 (function () {
-    // ===== 파티클 =====
+    // ===== 파티클 (모바일은 수 줄여 GPU 부하 감소) =====
+    var isMobile = !window.matchMedia('(hover: hover)').matches;
     var pc = document.getElementById('particles');
-    for (var i = 0; i < 20; i++) {
+    for (var i = 0; i < (isMobile ? 6 : 20); i++) {
         var p  = document.createElement('div');
         p.className = 'particle';
         var w  = Math.random() * 10 + 4;
@@ -651,8 +673,13 @@
         var pg = pages[current];
         pg.style.transition = 'transform 0.85s cubic-bezier(0.645,0.045,0.355,1)';
         pg.style.transform   = 'rotateY(-180deg)';
-        setTimeout(function () { pg.style.zIndex = '0'; }, 425);
-        setTimeout(function () { current++; updateUI(); busy = false; }, 850);
+        // 애니메이션 완료 후 z-index 낮춤 — 중간에 낮추면 다음 페이지가 조기 노출됨
+        setTimeout(function () {
+            pg.style.zIndex = '0';
+            current++;
+            updateUI();
+            busy = false;
+        }, 880);
     };
 
     window.goPrev = function () {
@@ -694,6 +721,8 @@
         var ang  = Math.random() * Math.PI * 2;
         nb.vx    = Math.cos(ang) * 2.8;
         nb.vy    = Math.sin(ang) * 2.8;
+        noBtn.style.width      = noBtn.offsetWidth  + 'px'; // 너비 고정 (flex 이탈 후 리플로 방지)
+        noBtn.style.height     = noBtn.offsetHeight + 'px'; // 높이 고정
         noBtn.style.position   = 'fixed';
         noBtn.style.transition = 'none';
         noBtn.style.margin     = '0';
@@ -702,6 +731,56 @@
         noBtn.style.top        = nb.y + 'px';
         nb.live = true;
         requestAnimationFrame(nbTick);
+    }
+
+    // 모바일: transform 기반 도망 (GPU 합성 → 깜박임 없음)
+    function mobileDodge() {
+        if (!noBtn || noBtn.style.display === 'none') return;
+        var front = document.getElementById('proposeFront');
+        var fr    = front.getBoundingClientRect();
+        var pad   = 20;
+        var bw    = noBtn.offsetWidth;
+        var bh    = noBtn.offsetHeight;
+
+        if (!nb.mobileInit) {
+            // 처음: left=0,top=0 고정 후 translate로 현재 위치 표현
+            var r    = noBtn.getBoundingClientRect();
+            nb.mtx   = r.left;
+            nb.mty   = r.top;
+            noBtn.style.width      = bw + 'px';
+            noBtn.style.height     = bh + 'px';
+            noBtn.style.position   = 'fixed';
+            noBtn.style.left       = '0';
+            noBtn.style.top        = '0';
+            noBtn.style.margin     = '0';
+            noBtn.style.zIndex     = '9998';
+            noBtn.style.willChange = 'transform';
+            noBtn.style.transition = 'none';
+            noBtn.style.transform  = 'translate3d(' + Math.round(nb.mtx) + 'px,' + Math.round(nb.mty) + 'px,0)';
+            nb.mobileInit = true;
+            nb.live = true;
+        }
+
+        // proposeFront 안의 랜덤 위치 (translate 목표값 = 화면 좌표)
+        var minTx = fr.left + pad;
+        var maxTx = fr.left + fr.width  - bw - pad;
+        var minTy = fr.top  + pad;
+        var maxTy = fr.top  + fr.height - bh - pad;
+
+        var newTx, newTy, tries = 0;
+        do {
+            newTx = minTx + Math.random() * (maxTx - minTx);
+            newTy = minTy + Math.random() * (maxTy - minTy);
+            tries++;
+        } while (tries < 10 && Math.abs(newTx - nb.mtx) < 50 && Math.abs(newTy - nb.mty) < 50);
+
+        // transform만 변경 — layout/paint 없이 GPU 합성
+        noBtn.style.transition = 'transform 0.2s ease-out';
+        noBtn.style.transform  = 'translate3d(' + Math.round(newTx) + 'px,' + Math.round(newTy) + 'px,0)';
+        nb.mtx = newTx;
+        nb.mty = newTy;
+
+        setTimeout(function () { noBtn.style.transition = 'none'; }, 220);
     }
 
     function nbTick() {
@@ -732,8 +811,9 @@
         requestAnimationFrame(nbTick);
     }
 
-    // 마우스 근접 시: 미활성이면 활성화, 활성이면 반발력 적용
+    // 마우스 근접 시: 데스크탑 전용 (모바일 합성 이벤트 차단)
     document.addEventListener('mousemove', function (e) {
+        if (isMobile) return; // 터치 기기에서 합성 mousemove 무시
         if (current !== TOTAL - 1 || noBtn.style.display === 'none') return;
 
         if (!nb.live) {
@@ -759,8 +839,13 @@
         }
     });
 
-    noBtn.addEventListener('touchstart', function (e) { e.preventDefault(); }, { passive: false });
-    noBtn.addEventListener('click',       function (e) { e.preventDefault(); });
+    noBtn.addEventListener('touchstart', function (e) {
+        e.preventDefault();
+        e.stopPropagation(); // 스와이프 페이지 전환 방지
+        if (current !== TOTAL - 1) return;
+        mobileDodge();
+    }, { passive: false });
+    noBtn.addEventListener('click', function (e) { e.preventDefault(); });
 
     // ===== YES =====
     window.onYes = function () {

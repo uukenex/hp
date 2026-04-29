@@ -74,16 +74,13 @@
       <div class="label">자동차 관리기록부</div>
       <div class="desc">정비 이력 관리</div>
     </a>
-    <a href="<%=request.getContextPath()%>/transport/list" class="card">
-      <span class="icon">&#x1F69B;</span>
-      <div class="label">차량 운송 관리</div>
-      <div class="desc">운송 기록 관리</div>
-    </a>
+    <!-- 
     <a href="<%=request.getContextPath()%>/bom/invite" class="card">
       <span class="icon">&#x1F490;</span>
       <div class="label">청첩장</div>
       <div class="desc">모바일 초대장</div>
     </a>
+     -->
   </div>
 </div>
 </body>

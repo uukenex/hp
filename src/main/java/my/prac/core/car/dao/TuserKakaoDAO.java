@@ -1,32 +1,17 @@
 package my.prac.core.car.dao;
 
-import org.mybatis.spring.SqlSessionTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import my.prac.core.car.dto.TuserKakaoDto;
 
-@Repository
-public class TuserKakaoDAO {
+@Repository("core.car.TuserKakaoDAO")
+public interface TuserKakaoDAO {
 
-    private static final String NS = "TuserKakaoMapper.";
+    public TuserKakaoDto findByKakaoId(String kakaoId);
 
-    @Autowired
-    private SqlSessionTemplate sqlSession;
+    public TuserKakaoDto findByToken(String token);
 
-    public TuserKakaoDto findByKakaoId(String kakaoId) {
-        return sqlSession.selectOne(NS + "findByKakaoId", kakaoId);
-    }
+    public int insert(TuserKakaoDto dto);
 
-    public TuserKakaoDto findByToken(String token) {
-        return sqlSession.selectOne(NS + "findByToken", token);
-    }
-
-    public int insert(TuserKakaoDto dto) {
-        return sqlSession.insert(NS + "insert", dto);
-    }
-
-    public int updateLogin(TuserKakaoDto dto) {
-        return sqlSession.update(NS + "updateLogin", dto);
-    }
+    public int updateLogin(TuserKakaoDto dto);
 }

@@ -4,6 +4,7 @@ import javax.sql.DataSource;
 
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.SqlSessionTemplate;
+import org.mybatis.spring.annotation.MapperScan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -23,6 +24,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @Configuration
+@MapperScan("my.prac.core.car.dao")
 @PropertySource("classpath:/safety/keys.properties")
 @ComponentScan(basePackages = { "my.prac.api", "my.prac.core.car" },
     excludeFilters = @Filter(type = FilterType.ANNOTATION, classes = Controller.class))
