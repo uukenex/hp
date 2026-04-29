@@ -2,12 +2,13 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="CarTransportMapper">
+<mapper namespace="my.prac.core.car.dao.CarTransportDAO">
 
     <!--
         DDL (Oracle) - 아래 SQL을 서버에서 직접 실행 후 사용:
 
-        CREATE TABLE CAR_TRANSPORT (
+        -- 운송 메인 테이블
+        CREATE TABLE TCAR_TRANSPORT (
             ID               NUMBER          PRIMARY KEY,
             TRANSPORT_DATE   DATE            NOT NULL,
             DRIVER_NAME      VARCHAR2(100),
@@ -20,8 +21,28 @@
             COMPANY_PRICE    NUMBER(15)      DEFAULT 0,
             CREATED_AT       DATE            DEFAULT SYSDATE
         );
-        CREATE SEQUENCE CAR_TRANSPORT_SEQ START WITH 1 INCREMENT BY 1 NOCACHE;
+        CREATE SEQUENCE TCAR_TRANSPORT_SEQ START WITH 1 INCREMENT BY 1 NOCACHE;
+
+        -- 장표(첨부파일) 테이블
+        CREATE TABLE TCAR_TRANSPORT_FILE (
+            FILE_ID         NUMBER          PRIMARY KEY,
+            TRANSPORT_ID    NUMBER          NOT NULL,
+            ORIGINAL_NAME   VARCHAR2(500)   NOT NULL,
+            SAVED_NAME      VARCHAR2(500)   NOT NULL,
+            FILE_PATH       VARCHAR2(1000),
+            FILE_SIZE       NUMBER(15)      DEFAULT 0,
+            FILE_EXT        VARCHAR2(20),
+            CREATED_AT      DATE            DEFAULT SYSDATE,
+            CONSTRAINT FK_TCAR_TRANSPORT_FILE
+                FOREIGN KEY (TRANSPORT_ID) REFERENCES TCAR_TRANSPORT(ID)
+        );
+        CREATE SEQUENCE TCAR_TRANSPORT_FILE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE;
+
+        -- 기존 CAR_TRANSPORT 데이터 이관 (필요 시)
+        -- INSERT INTO TCAR_TRANSPORT SELECT * FROM CAR_TRANSPORT;
     -->
+
+    <!-- ==================== 운송 CRUD ==================== -->
 
     <select id="getList" parameterType="map" resultType="my.prac.core.car.dto.CarTransportDto">
         SELECT
@@ -36,10 +57,10 @@
             SUPPLY_PRICE,
             COMPANY_PRICE,
             TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT
-        FROM CAR_TRANSPORT
+        FROM TCAR_TRANSPORT
         <where>
             <if test="dateFrom != null and dateFrom != ''">
-                AND TRANSPORT_DATE >= TO_DATE(#{dateFrom}, 'YYYY-MM-DD')
+                AND TRANSPORT_DATE &gt;= TO_DATE(#{dateFrom}, 'YYYY-MM-DD')
             </if>
             <if test="dateTo != null and dateTo != ''">
                 AND TRANSPORT_DATE &lt;= TO_DATE(#{dateTo}, 'YYYY-MM-DD')
@@ -67,17 +88,17 @@
             SUPPLY_PRICE,
             COMPANY_PRICE,
             TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT
-        FROM CAR_TRANSPORT
+        FROM TCAR_TRANSPORT
         WHERE ID = #{id}
     </select>
 
     <insert id="insert" parameterType="my.prac.core.car.dto.CarTransportDto">
-        INSERT INTO CAR_TRANSPORT (
+        INSERT INTO TCAR_TRANSPORT (
             ID, TRANSPORT_DATE, DRIVER_NAME, COMPANY,
             LOADING_POINT, UNLOADING_POINT, CAR_MODEL, VEHICLE_NO,
             SUPPLY_PRICE, COMPANY_PRICE, CREATED_AT
         ) VALUES (
-            CAR_TRANSPORT_SEQ.NEXTVAL,
+            TCAR_TRANSPORT_SEQ.NEXTVAL,
             TO_DATE(#{transportDate}, 'YYYY-MM-DD'),
             #{driverName}, #{company},
             #{loadingPoint}, #{unloadingPoint}, #{carModel}, #{vehicleNo},
@@ -86,7 +107,7 @@
     </insert>
 
     <update id="update" parameterType="my.prac.core.car.dto.CarTransportDto">
-        UPDATE CAR_TRANSPORT SET
+        UPDATE TCAR_TRANSPORT SET
             TRANSPORT_DATE  = TO_DATE(#{transportDate}, 'YYYY-MM-DD'),
             DRIVER_NAME     = #{driverName},
             COMPANY         = #{company},
@@ -100,7 +121,57 @@
     </update>
 
     <delete id="delete" parameterType="int">
-        DELETE FROM CAR_TRANSPORT WHERE ID = #{id}
+        DELETE FROM TCAR_TRANSPORT WHERE ID = #{id}
+    </delete>
+
+    <!-- ==================== 장표(첨부파일) CRUD ==================== -->
+
+    <select id="getFileList" parameterType="int" resultType="my.prac.core.car.dto.CarTransportFileDto">
+        SELECT
+            FILE_ID,
+            TRANSPORT_ID,
+            ORIGINAL_NAME,
+            SAVED_NAME,
+            FILE_PATH,
+            FILE_SIZE,
+            FILE_EXT,
+            TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT
+        FROM TCAR_TRANSPORT_FILE
+        WHERE TRANSPORT_ID = #{transportId}
+        ORDER BY FILE_ID ASC
+    </select>
+
+    <select id="getFileDetail" parameterType="int" resultType="my.prac.core.car.dto.CarTransportFileDto">
+        SELECT
+            FILE_ID,
+            TRANSPORT_ID,
+            ORIGINAL_NAME,
+            SAVED_NAME,
+            FILE_PATH,
+            FILE_SIZE,
+            FILE_EXT,
+            TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT
+        FROM TCAR_TRANSPORT_FILE
+        WHERE FILE_ID = #{fileId}
+    </select>
+
+    <insert id="insertFile" parameterType="my.prac.core.car.dto.CarTransportFileDto">
+        INSERT INTO TCAR_TRANSPORT_FILE (
+            FILE_ID, TRANSPORT_ID, ORIGINAL_NAME, SAVED_NAME,
+            FILE_PATH, FILE_SIZE, FILE_EXT, CREATED_AT
+        ) VALUES (
+            TCAR_TRANSPORT_FILE_SEQ.NEXTVAL,
+            #{transportId}, #{originalName}, #{savedName},
+            #{filePath}, #{fileSize}, #{fileExt}, SYSDATE
+        )
+    </insert>
+
+    <delete id="deleteFile" parameterType="int">
+        DELETE FROM TCAR_TRANSPORT_FILE WHERE FILE_ID = #{fileId}
+    </delete>
+
+    <delete id="deleteFilesByTransportId" parameterType="int">
+        DELETE FROM TCAR_TRANSPORT_FILE WHERE TRANSPORT_ID = #{transportId}
     </delete>
 
 </mapper>

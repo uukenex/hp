@@ -499,9 +499,55 @@
             color: #d4c8a0;
             line-height: 1.9;
         }
+
+        /* ===== 로딩 스크린 ===== */
+        #loadingScreen {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at 35% 45%, #fdf8f0 0%, #f6ecdc 55%, #ede0c8 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 0.55s ease;
+        }
+        #loadingScreen.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .loading-icon {
+            font-size: 36px;
+            animation: heartbeat 1.8s ease-in-out infinite;
+        }
+        .loading-dots {
+            display: flex;
+            gap: 9px;
+        }
+        .loading-dots span {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: rgba(184, 146, 46, 0.65);
+            animation: dotPulse 1.1s ease-in-out infinite;
+        }
+        .loading-dots span:nth-child(2) { animation-delay: 0.18s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.36s; }
+        @keyframes dotPulse {
+            0%, 100% { transform: scale(0.55); opacity: 0.35; }
+            50%       { transform: scale(1);    opacity: 1; }
+        }
     </style>
 </head>
 <body>
+
+<!-- 로딩 스크린: 폰트·이미지 준비 전 깜박임 방지 -->
+<div id="loadingScreen">
+    <div class="loading-icon">💌</div>
+    <div class="loading-dots"><span></span><span></span><span></span></div>
+</div>
 
 <div id="yesOverlay"></div>
 <div class="particles" id="particles"></div>
@@ -616,6 +662,32 @@
 </div>
 
 <script>
+// ===== 로딩 스크린: 폰트 + 이미지 준비 후 페이드아웃 =====
+(function () {
+    var imageUrls = [
+        '/img_bom/1.jpg', '/img_bom/2.jpg', '/img_bom/3.jpg',
+        '/img_bom/4.jpg', '/img_bom/5.jpg', '/img_bom/6.jpg',
+        '/img_bom/7.jpg', '/img_bom/totoro.jpg'
+    ];
+    function preloadImages(urls) {
+        return Promise.all(urls.map(function (url) {
+            return new Promise(function (resolve) {
+                var img = new Image();
+                img.onload = img.onerror = resolve;
+                img.src = url;
+            });
+        }));
+    }
+    var fontsReady = (document.fonts && document.fonts.ready)
+        ? document.fonts.ready : Promise.resolve();
+    Promise.all([fontsReady, preloadImages(imageUrls)]).then(function () {
+        var screen = document.getElementById('loadingScreen');
+        if (!screen) return;
+        screen.classList.add('hide');
+        setTimeout(function () { screen.style.display = 'none'; }, 560);
+    });
+})();
+
 (function () {
     // ===== 파티클 (모바일은 수 줄여 GPU 부하 감소) =====
     var isMobile = !window.matchMedia('(hover: hover)').matches;

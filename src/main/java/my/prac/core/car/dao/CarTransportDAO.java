@@ -3,37 +3,23 @@ package my.prac.core.car.dao;
 import java.util.List;
 import java.util.Map;
 
-import org.mybatis.spring.SqlSessionTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import my.prac.core.car.dto.CarTransportDto;
+import my.prac.core.car.dto.CarTransportFileDto;
 
-@Repository
-public class CarTransportDAO {
+@Repository("core.car.CarTransportDAO")
+public interface CarTransportDAO {
+    List<CarTransportDto>     getList(Map<String, Object> params);
+    CarTransportDto           getDetail(int id);
+    int                       insert(CarTransportDto dto);
+    int                       update(CarTransportDto dto);
+    int                       delete(int id);
 
-    private static final String NS = "CarTransportMapper.";
-
-    @Autowired
-    private SqlSessionTemplate sqlSession;
-
-    public List<CarTransportDto> getList(Map<String, Object> params) {
-        return sqlSession.selectList(NS + "getList", params);
-    }
-
-    public CarTransportDto getDetail(int id) {
-        return sqlSession.selectOne(NS + "getDetail", id);
-    }
-
-    public int insert(CarTransportDto dto) {
-        return sqlSession.insert(NS + "insert", dto);
-    }
-
-    public int update(CarTransportDto dto) {
-        return sqlSession.update(NS + "update", dto);
-    }
-
-    public int delete(int id) {
-        return sqlSession.delete(NS + "delete", id);
-    }
+    // 장표(파일첨부) 관련
+    List<CarTransportFileDto> getFileList(int transportId);
+    CarTransportFileDto       getFileDetail(int fileId);
+    int                       insertFile(CarTransportFileDto dto);
+    int                       deleteFile(int fileId);
+    int                       deleteFilesByTransportId(int transportId);
 }

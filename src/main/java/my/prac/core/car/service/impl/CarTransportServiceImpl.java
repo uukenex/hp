@@ -3,17 +3,19 @@ package my.prac.core.car.service.impl;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.annotation.Resource;
+
 import org.springframework.stereotype.Service;
 
 import my.prac.core.car.dao.CarTransportDAO;
 import my.prac.core.car.dto.CarTransportDto;
+import my.prac.core.car.dto.CarTransportFileDto;
 import my.prac.core.car.service.CarTransportService;
 
-@Service
+@Service("core.car.CarTransportService")
 public class CarTransportServiceImpl implements CarTransportService {
 
-    @Autowired
+    @Resource(name = "core.car.CarTransportDAO")
     private CarTransportDAO carTransportDAO;
 
     @Override
@@ -39,5 +41,30 @@ public class CarTransportServiceImpl implements CarTransportService {
     @Override
     public void delete(int id) {
         carTransportDAO.delete(id);
+    }
+
+    @Override
+    public List<CarTransportFileDto> getFileList(int transportId) {
+        return carTransportDAO.getFileList(transportId);
+    }
+
+    @Override
+    public CarTransportFileDto getFileDetail(int fileId) {
+        return carTransportDAO.getFileDetail(fileId);
+    }
+
+    @Override
+    public void insertFile(CarTransportFileDto dto) {
+        carTransportDAO.insertFile(dto);
+    }
+
+    @Override
+    public void deleteFile(int fileId) {
+        carTransportDAO.deleteFile(fileId);
+    }
+
+    @Override
+    public void deleteFilesByTransportId(int transportId) {
+        carTransportDAO.deleteFilesByTransportId(transportId);
     }
 }
