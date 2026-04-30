@@ -44,7 +44,10 @@ public class CarSessionInterceptor extends HandlerInterceptorAdapter {
             }
         }
 
-        // 3. 인증 없음 → 로그인 페이지
+        // 3. 인증 없음 → 원래 요청 URL 저장 후 로그인 페이지
+        String query = request.getQueryString();
+        String originalUrl = request.getRequestURI() + (query != null ? "?" + query : "");
+        session.setAttribute("redirectAfterLogin", originalUrl);
         response.sendRedirect(request.getContextPath() + "/car/login");
         return false;
     }
