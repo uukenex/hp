@@ -34,6 +34,13 @@ public class CarTransportServiceImpl implements CarTransportService {
     }
 
     @Override
+    public void insertBatch(List<CarTransportDto> list) {
+        for (CarTransportDto dto : list) {
+            carTransportDAO.insert(dto);
+        }
+    }
+
+    @Override
     public void update(CarTransportDto dto) {
         carTransportDAO.update(dto);
     }

@@ -10,6 +10,7 @@ public interface CarTransportService {
     List<CarTransportDto>     getList(Map<String, Object> params);
     CarTransportDto           getDetail(int id);
     void                      insert(CarTransportDto dto);
+    void                      insertBatch(List<CarTransportDto> list);
     void                      update(CarTransportDto dto);
     void                      delete(int id);
 

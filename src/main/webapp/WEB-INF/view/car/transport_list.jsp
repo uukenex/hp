@@ -320,7 +320,7 @@
 <div class="top-bar">
   <h1>🚚 차량 운송 관리</h1>
   <div class="nav-links">
-    <a href="${pageContext.request.contextPath}/car/board/list">정비기록부</a>
+    <a href="${pageContext.request.contextPath}/transport/bulk">일괄입력</a>
     <a href="${pageContext.request.contextPath}/">홈</a>
     <a href="${pageContext.request.contextPath}/car/logout">로그아웃</a>
   </div>
