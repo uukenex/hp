@@ -418,15 +418,15 @@
       <div class="s-label">조회 건수</div>
       <div class="s-value">${list.size()}<span class="s-unit">건</span></div>
     </div>
-    <div class="summary-card">
+    <div class="summary-card" id="cardSupply">
       <div class="s-label">공급가 합계</div>
       <div class="s-value"><fmt:formatNumber value="${totalSupply}" pattern="#,###"/><span class="s-unit">원</span></div>
     </div>
-    <div class="summary-card">
+    <div class="summary-card" id="cardCompany">
       <div class="s-label">회사공급가 합계</div>
       <div class="s-value"><fmt:formatNumber value="${totalCompany}" pattern="#,###"/><span class="s-unit">원</span></div>
     </div>
-    <div class="summary-card">
+    <div class="summary-card" id="cardMargin">
       <div class="s-label">마진 합계</div>
       <div class="s-value" style="color:#2e7d32;">
         <fmt:formatNumber value="${totalCompany - totalSupply}" pattern="#,###"/><span class="s-unit">원</span>
@@ -492,10 +492,16 @@
       <c:if test="${not empty list}">
       <tfoot>
         <tr>
-          <td colspan="7" style="text-align:right;color:#555;">합계</td>
-          <td class="td-supply"><fmt:formatNumber value="${totalSupply}" pattern="#,###"/></td>
-          <td class="td-company"><fmt:formatNumber value="${totalCompany}" pattern="#,###"/></td>
-          <td></td>
+          <td data-col="날짜" style="text-align:right;color:#555;">합계</td>
+          <td data-col="기사님"></td>
+          <td data-col="회사"></td>
+          <td data-col="상차"></td>
+          <td data-col="하차"></td>
+          <td data-col="차종"></td>
+          <td data-col="차대번호"></td>
+          <td data-col="공급가" class="td-supply"><fmt:formatNumber value="${totalSupply}" pattern="#,###"/></td>
+          <td data-col="회사공급가" class="td-company"><fmt:formatNumber value="${totalCompany}" pattern="#,###"/></td>
+          <td data-col="관리"></td>
         </tr>
       </tfoot>
       </c:if>
@@ -601,11 +607,21 @@ function applyColVisibility() {
     var col = th.getAttribute('data-col');
     th.style.display = hidden.indexOf(col) >= 0 ? 'none' : '';
   });
-  // tbody td, tfoot td — data-col 속성으로 처리
+  // tbody td, tfoot td
   table.querySelectorAll('tbody td[data-col], tfoot td[data-col]').forEach(function(td) {
     var col = td.getAttribute('data-col');
     td.style.display = hidden.indexOf(col) >= 0 ? 'none' : '';
   });
+
+  // 요약 카드: 해당 컬럼 숨김 시 카드도 숨김
+  var supplyHidden  = hidden.indexOf('공급가') >= 0;
+  var companyHidden = hidden.indexOf('회사공급가') >= 0;
+  var cardSupply  = document.getElementById('cardSupply');
+  var cardCompany = document.getElementById('cardCompany');
+  var cardMargin  = document.getElementById('cardMargin');
+  if (cardSupply)  cardSupply.style.display  = supplyHidden  ? 'none' : '';
+  if (cardCompany) cardCompany.style.display = companyHidden ? 'none' : '';
+  if (cardMargin)  cardMargin.style.display  = (supplyHidden || companyHidden) ? 'none' : '';
 }
 
 function buildColFilterUI() {
