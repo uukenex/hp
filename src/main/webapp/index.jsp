@@ -69,11 +69,6 @@
   <h1>dev-apc</h1>
   <p class="sub">서비스를 선택해주세요</p>
   <div class="card-row">
-    <a href="<%=request.getContextPath()%>/car/board/list" class="card">
-      <span class="icon">&#x1F697;</span>
-      <div class="label">자동차 관리기록부</div>
-      <div class="desc">정비 이력 관리</div>
-    </a>
     <a href="<%=request.getContextPath()%>/transport/list" class="card">
       <span class="icon">&#x1F69A;</span>
       <div class="label">차량 운송관리</div>

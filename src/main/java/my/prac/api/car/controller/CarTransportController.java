@@ -1,5 +1,6 @@
 package my.prac.api.car.controller;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,5 +80,73 @@ public class CarTransportController {
     public String delete(@PathVariable int id) {
         carTransportService.delete(id);
         return "redirect:/transport/list";
+    }
+
+    /** 일괄 입력 폼 */
+    @GetMapping("/bulk")
+    public String bulkForm() {
+        return "car/transport_bulk";
+    }
+
+    /** 일괄 저장 */
+    @PostMapping("/bulk")
+    public String bulkSave(
+            @RequestParam(value = "transportDate[]", required = false) List<String> dates,
+            @RequestParam(value = "driverName[]",    required = false) List<String> driverNames,
+            @RequestParam(value = "company[]",       required = false) List<String> companies,
+            @RequestParam(value = "loadingPoint[]",  required = false) List<String> loadingPoints,
+            @RequestParam(value = "unloadingPoint[]",required = false) List<String> unloadingPoints,
+            @RequestParam(value = "carModel[]",      required = false) List<String> carModels,
+            @RequestParam(value = "vehicleNo[]",     required = false) List<String> vehicleNos,
+            @RequestParam(value = "supplyPrice[]",   required = false) List<String> supplyPrices,
+            @RequestParam(value = "companyPrice[]",  required = false) List<String> companyPrices) {
+
+        if (dates == null || dates.isEmpty()) {
+            return "redirect:/transport/bulk";
+        }
+
+        List<CarTransportDto> batch = new ArrayList<>();
+        for (int i = 0; i < dates.size(); i++) {
+            String date       = getOrEmpty(dates, i);
+            String driverName = getOrEmpty(driverNames, i);
+            String company    = getOrEmpty(companies, i);
+            String loading    = getOrEmpty(loadingPoints, i);
+            String unloading  = getOrEmpty(unloadingPoints, i);
+
+            // 필수값 없으면 해당 행 스킵
+            if (date.isEmpty() || driverName.isEmpty() || company.isEmpty()
+                    || loading.isEmpty() || unloading.isEmpty()) {
+                continue;
+            }
+
+            CarTransportDto dto = new CarTransportDto();
+            dto.setTransportDate(date);
+            dto.setDriverName(driverName);
+            dto.setCompany(company);
+            dto.setLoadingPoint(loading);
+            dto.setUnloadingPoint(unloading);
+            dto.setCarModel(getOrEmpty(carModels, i));
+            dto.setVehicleNo(getOrEmpty(vehicleNos, i));
+            dto.setSupplyPrice(parseLong(getOrEmpty(supplyPrices, i)));
+            dto.setCompanyPrice(parseLong(getOrEmpty(companyPrices, i)));
+            batch.add(dto);
+        }
+
+        if (!batch.isEmpty()) {
+            carTransportService.insertBatch(batch);
+        }
+
+        return "redirect:/transport/bulk?saved=" + batch.size();
+    }
+
+    private String getOrEmpty(List<String> list, int idx) {
+        if (list == null || idx >= list.size()) return "";
+        String v = list.get(idx);
+        return v == null ? "" : v.trim();
+    }
+
+    private long parseLong(String val) {
+        try { return Long.parseLong(val.replaceAll("[^0-9]", "")); }
+        catch (Exception e) { return 0L; }
     }
 }
