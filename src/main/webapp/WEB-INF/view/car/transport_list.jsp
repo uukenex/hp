@@ -9,12 +9,12 @@
 <title>차량 운송 관리</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Apple SD Gothic Neo','Malgun Gothic', sans-serif; background: #f0f2f5; font-size: 13px; }
+  body { font-family: 'Apple SD Gothic Neo','Malgun Gothic', sans-serif; background: #f5f7fa; font-size: 13px; }
 
   /* ===== 상단바 ===== */
   .top-bar {
-    background: #1e3a5f;
-    color: #fff;
+    background: #fff;
+    color: #1565c0;
     padding: 0 16px;
     height: 52px;
     display: flex;
@@ -23,25 +23,27 @@
     position: sticky;
     top: 0;
     z-index: 100;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
   }
-  .top-bar h1 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+  .top-bar h1 { font-size: 16px; font-weight: 700; color: #1565c0; }
   .nav-links { display: flex; gap: 14px; }
   .nav-links a {
-    color: rgba(255,255,255,0.75);
+    color: #1976d2;
     text-decoration: none;
     font-size: 12px;
   }
-  .nav-links a:hover { color: #fff; }
+  .nav-links a:hover { color: #1565c0; }
 
   .container { padding: 14px 14px 80px; }
 
   /* ===== 검색 ===== */
   .search-box {
     background: #fff;
-    border: 1px solid #dde1e7;
+    border: 1px solid #dde3ed;
     border-radius: 10px;
     padding: 14px;
     margin-bottom: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   }
   .search-row {
     display: flex;
@@ -62,6 +64,11 @@
     font-size: 13px;
     width: 130px;
   }
+  .search-field input:focus {
+    outline: none;
+    border-color: #1976d2;
+    box-shadow: 0 0 0 2px rgba(25,118,210,0.10);
+  }
   .sep { color: #aaa; font-size: 12px; }
   .search-btns { display: flex; gap: 6px; margin-left: auto; }
 
@@ -75,10 +82,19 @@
     font-weight: 600;
     white-space: nowrap;
     touch-action: manipulation;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
   }
-  .btn-search { background: #1e3a5f; color: #fff; }
-  .btn-reset  { background: #eee;    color: #555; }
-  .btn-search:active { background: #163060; }
+  .btn-search  { background: #1976d2; color: #fff; }
+  .btn-reset   { background: #eee;    color: #555; }
+  .btn-new     { background: #2e7d32; color: #fff; }
+  .btn-bulk    { background: #e8f0fe; color: #1565c0; border: 1px solid #90caf9; }
+  .btn-col-filter { background: #f5f7fa; color: #555; border: 1px solid #ccc; }
+  .btn-search:active { background: #1565c0; }
+  .btn-new:hover     { background: #245f27; }
+  .btn-bulk:hover    { background: #d0e4fd; }
 
   /* ===== 요약 카드 ===== */
   .summary-row {
@@ -89,21 +105,23 @@
   }
   .summary-card {
     background: #fff;
-    border: 1px solid #dde1e7;
+    border: 1px solid #dde3ed;
     border-radius: 10px;
     padding: 10px 14px;
     text-align: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   }
   .s-label { font-size: 11px; color: #888; margin-bottom: 3px; }
-  .s-value { font-size: 16px; font-weight: 700; color: #1e3a5f; }
+  .s-value { font-size: 16px; font-weight: 700; color: #1565c0; }
   .s-unit  { font-size: 10px; color: #888; margin-left: 1px; }
 
-  /* ===== 테이블 (데스크탑) ===== */
+  /* ===== 테이블 래퍼 ===== */
   .table-wrap {
     background: #fff;
-    border: 1px solid #dde1e7;
+    border: 1px solid #dde3ed;
     border-radius: 10px;
     overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   }
   .table-header {
     padding: 10px 14px;
@@ -111,12 +129,15 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
   }
   .table-header .count { font-size: 12px; color: #888; }
+  .table-header-right { display: flex; gap: 6px; align-items: center; }
+
   table { width: 100%; border-collapse: collapse; }
   thead th {
-    background: #f7f8fa;
-    border-bottom: 2px solid #dde1e7;
+    background: #f0f4fa;
+    border-bottom: 2px solid #dde3ed;
     padding: 9px 8px;
     text-align: center;
     font-size: 12px;
@@ -131,7 +152,7 @@
     font-size: 12px;
     color: #333;
   }
-  tbody tr:hover { background: #f5f8ff; }
+  tbody tr:hover { background: #f0f6ff; }
   tbody tr:last-child td { border-bottom: none; }
   .td-supply  { text-align: right; font-weight: 700; color: #1565c0; }
   .td-company { text-align: right; font-weight: 700; color: #b71c1c; }
@@ -140,7 +161,7 @@
     font-weight: 700;
     padding: 9px 8px;
     font-size: 12px;
-    border-top: 2px solid #dde1e7;
+    border-top: 2px solid #dde3ed;
   }
   .empty-row td { color: #aaa; padding: 40px; text-align: center; }
 
@@ -160,14 +181,39 @@
     touch-action: manipulation;
   }
 
+  /* ===== 컬럼 필터 패널 ===== */
+  .col-filter-panel {
+    display: none;
+    background: #fff;
+    border: 1px solid #dde3ed;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .col-filter-panel.open { display: block; }
+  .col-filter-title { font-size: 12px; font-weight: 700; color: #444; margin-bottom: 8px; }
+  .col-filter-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .col-filter-list label {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 12px; color: #555; cursor: pointer;
+    background: #f5f7fa; border: 1px solid #dde3ed;
+    border-radius: 20px; padding: 4px 10px;
+    user-select: none;
+    transition: background 0.1s;
+  }
+  .col-filter-list label:hover { background: #e8f0fe; }
+  .col-filter-list input[type=checkbox] { accent-color: #1976d2; }
+
   /* ===== 카드 뷰 (모바일) ===== */
   .card-list { display: none; }
   .transport-card {
     background: #fff;
-    border: 1px solid #dde1e7;
+    border: 1px solid #dde3ed;
     border-radius: 12px;
     padding: 14px;
     margin-bottom: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   }
   .card-top {
     display: flex;
@@ -175,12 +221,12 @@
     justify-content: space-between;
     margin-bottom: 10px;
   }
-  .card-date { font-size: 13px; font-weight: 700; color: #1e3a5f; }
+  .card-date { font-size: 13px; font-weight: 700; color: #1565c0; }
   .card-company { font-size: 12px; color: #666; }
   .card-driver {
     display: inline-block;
-    background: #e8edf5;
-    color: #1e3a5f;
+    background: #e8f0fe;
+    color: #1565c0;
     font-size: 12px;
     font-weight: 700;
     padding: 3px 10px;
@@ -195,9 +241,9 @@
     margin-bottom: 10px;
     flex-wrap: wrap;
   }
-  .card-route .arrow { color: #1e3a5f; font-weight: 700; }
+  .card-route .arrow { color: #1976d2; font-weight: 700; }
   .card-route .point {
-    background: #f0f2f5;
+    background: #f5f7fa;
     padding: 3px 8px;
     border-radius: 4px;
     flex: 1;
@@ -215,7 +261,7 @@
     margin-bottom: 10px;
   }
   .card-info .tag {
-    background: #f7f8fa;
+    background: #f5f7fa;
     border: 1px solid #eee;
     padding: 2px 8px;
     border-radius: 4px;
@@ -227,7 +273,7 @@
   }
   .card-price-box {
     flex: 1;
-    background: #f7f8fa;
+    background: #f5f7fa;
     border-radius: 8px;
     padding: 8px 10px;
     text-align: center;
@@ -250,7 +296,7 @@
   .card-actions .btn-edit { background: #e3f0fb; color: #1565c0; padding: 10px; }
   .card-actions .btn-del  { background: #fde8e8; color: #c62828; margin-left: 0; padding: 10px; }
 
-  /* ===== FAB (모바일 추가 버튼) ===== */
+  /* ===== FAB ===== */
   .fab {
     display: none;
     position: fixed;
@@ -271,31 +317,19 @@
     touch-action: manipulation;
   }
 
-  /* ===== 모바일 미디어쿼리 ===== */
+  /* ===== 모바일 ===== */
   @media (max-width: 700px) {
     .container { padding: 10px 10px 80px; }
-
-    /* 검색폼 세로 정렬 */
     .search-row { flex-direction: column; align-items: stretch; gap: 10px; }
     .search-field { flex-wrap: wrap; }
     .search-field input { flex: 1; width: auto; min-width: 0; }
-    .search-btns { margin-left: 0; }
+    .search-btns { margin-left: 0; flex-wrap: wrap; }
     .search-btns .btn { flex: 1; padding: 10px; font-size: 14px; }
-
-    /* 요약: 이미 2x2 그리드라 OK */
     .s-value { font-size: 14px; }
-
-    /* 테이블 숨기고 카드 표시 */
     .table-wrap { display: none; }
     .card-list { display: block; }
-
-    /* FAB 표시 */
     .fab { display: block; }
-
-    /* 데스크탑 추가 버튼 숨김 */
     .btn-add-desktop { display: none; }
-
-    /* 상단바 */
     .top-bar h1 { font-size: 14px; }
     .nav-links a { font-size: 11px; }
     .nav-links { gap: 10px; }
@@ -310,6 +344,9 @@
       font-size: 13px;
       font-weight: 600;
       white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
     .btn-add-desktop:hover { background: #245f27; }
   }
@@ -320,11 +357,23 @@
 <div class="top-bar">
   <h1>🚚 차량 운송 관리</h1>
   <div class="nav-links">
-    <a href="${pageContext.request.contextPath}/transport/bulk">일괄입력</a>
     <a href="${pageContext.request.contextPath}/">홈</a>
     <a href="${pageContext.request.contextPath}/car/logout">로그아웃</a>
   </div>
 </div>
+
+<%-- datalist: 기사님 이름 --%>
+<datalist id="driverNameList">
+  <c:forEach var="name" items="${driverNames}">
+    <option value="${name}"/>
+  </c:forEach>
+</datalist>
+<%-- datalist: 회사명 --%>
+<datalist id="companyList">
+  <c:forEach var="co" items="${companies}">
+    <option value="${co}"/>
+  </c:forEach>
+</datalist>
 
 <div class="container">
 
@@ -340,17 +389,24 @@
         </div>
         <div class="search-field">
           <label>기사님</label>
-          <input type="text" name="driverName" value="${driverName}" placeholder="기사님 이름">
+          <input type="text" name="driverName" value="${driverName}"
+                 placeholder="이름 입력 또는 선택"
+                 list="driverNameList" autocomplete="off">
         </div>
         <div class="search-field">
           <label>회사</label>
-          <input type="text" name="company" value="${company}" placeholder="회사명">
+          <input type="text" name="company" value="${company}"
+                 placeholder="회사명 입력 또는 선택"
+                 list="companyList" autocomplete="off">
         </div>
         <div class="search-btns">
           <button type="submit" class="btn btn-search">검색</button>
           <button type="button" class="btn btn-reset"
             onclick="location.href='${pageContext.request.contextPath}/transport/list'">초기화</button>
-          <a href="${pageContext.request.contextPath}/transport/write" class="btn btn-add-desktop">+ 새 기록</a>
+          <a href="${pageContext.request.contextPath}/transport/write"
+             class="btn btn-new btn-add-desktop">+ 새 기록</a>
+          <a href="${pageContext.request.contextPath}/transport/bulk"
+             class="btn btn-bulk btn-add-desktop">📋 일괄입력</a>
         </div>
       </div>
     </div>
@@ -378,18 +434,33 @@
     </div>
   </div>
 
+  <%-- 컬럼 필터 패널 --%>
+  <div class="col-filter-panel" id="colFilterPanel">
+    <div class="col-filter-title">표시할 컬럼 선택</div>
+    <div class="col-filter-list" id="colFilterList"></div>
+  </div>
+
   <%-- 데스크탑: 테이블 --%>
   <div class="table-wrap">
     <div class="table-header">
       <span class="count">총 <strong>${list.size()}</strong> 건</span>
+      <div class="table-header-right">
+        <button type="button" class="btn btn-col-filter" onclick="toggleColFilter()">⚙ 컬럼</button>
+      </div>
     </div>
-    <table>
+    <table id="mainTable">
       <thead>
         <tr>
-          <th>날짜</th><th>기사님</th><th>회사</th>
-          <th>상차</th><th>하차</th>
-          <th>차종</th><th>차대번호</th>
-          <th>공급가</th><th>회사공급가</th><th>관리</th>
+          <th data-col="날짜">날짜</th>
+          <th data-col="기사님">기사님</th>
+          <th data-col="회사">회사</th>
+          <th data-col="상차">상차</th>
+          <th data-col="하차">하차</th>
+          <th data-col="차종">차종</th>
+          <th data-col="차대번호">차대번호</th>
+          <th data-col="공급가">공급가</th>
+          <th data-col="회사공급가">회사공급가</th>
+          <th data-col="관리">관리</th>
         </tr>
       </thead>
       <tbody>
@@ -400,16 +471,16 @@
           <c:otherwise>
             <c:forEach var="item" items="${list}">
             <tr>
-              <td>${item.transportDate}</td>
-              <td>${item.driverName}</td>
-              <td>${item.company}</td>
-              <td>${item.loadingPoint}</td>
-              <td>${item.unloadingPoint}</td>
-              <td>${item.carModel}</td>
-              <td>${item.vehicleNo}</td>
-              <td class="td-supply"><fmt:formatNumber value="${item.supplyPrice}" pattern="#,###"/></td>
-              <td class="td-company"><fmt:formatNumber value="${item.companyPrice}" pattern="#,###"/></td>
-              <td>
+              <td data-col="날짜">${item.transportDate}</td>
+              <td data-col="기사님">${item.driverName}</td>
+              <td data-col="회사">${item.company}</td>
+              <td data-col="상차">${item.loadingPoint}</td>
+              <td data-col="하차">${item.unloadingPoint}</td>
+              <td data-col="차종">${item.carModel}</td>
+              <td data-col="차대번호">${item.vehicleNo}</td>
+              <td data-col="공급가" class="td-supply"><fmt:formatNumber value="${item.supplyPrice}" pattern="#,###"/></td>
+              <td data-col="회사공급가" class="td-company"><fmt:formatNumber value="${item.companyPrice}" pattern="#,###"/></td>
+              <td data-col="관리">
                 <button class="btn-edit" onclick="location.href='${pageContext.request.contextPath}/transport/edit/${item.id}'">수정</button>
                 <button class="btn-del" onclick="confirmDelete(${item.id})">삭제</button>
               </td>
@@ -495,12 +566,90 @@
 </form>
 
 <script>
+/* ===== 삭제 확인 ===== */
 function confirmDelete(id) {
-  if (!confirm('삭제하시겠습니까?')) return;
+  if (!confirm('삭제하시겠습니까?\n(숨김 처리되며 실제 삭제되지 않습니다)')) return;
   var f = document.getElementById('deleteForm');
   f.action = '${pageContext.request.contextPath}/transport/delete/' + id;
   f.submit();
 }
+
+/* ===== 컬럼 필터 ===== */
+var COL_STORAGE_KEY = 'transport_hidden_cols';
+
+// 숨길 수 없는 컬럼
+var FIXED_COLS = ['관리'];
+
+function getHiddenCols() {
+  try {
+    var v = localStorage.getItem(COL_STORAGE_KEY);
+    return v ? JSON.parse(v) : [];
+  } catch(e) { return []; }
+}
+
+function saveHiddenCols(hidden) {
+  try { localStorage.setItem(COL_STORAGE_KEY, JSON.stringify(hidden)); } catch(e) {}
+}
+
+function applyColVisibility() {
+  var hidden = getHiddenCols();
+  var table = document.getElementById('mainTable');
+  if (!table) return;
+
+  // thead th
+  table.querySelectorAll('thead th[data-col]').forEach(function(th) {
+    var col = th.getAttribute('data-col');
+    th.style.display = hidden.indexOf(col) >= 0 ? 'none' : '';
+  });
+  // tbody td, tfoot td — data-col 속성으로 처리
+  table.querySelectorAll('tbody td[data-col], tfoot td[data-col]').forEach(function(td) {
+    var col = td.getAttribute('data-col');
+    td.style.display = hidden.indexOf(col) >= 0 ? 'none' : '';
+  });
+}
+
+function buildColFilterUI() {
+  var table = document.getElementById('mainTable');
+  if (!table) return;
+  var hidden = getHiddenCols();
+  var container = document.getElementById('colFilterList');
+  container.innerHTML = '';
+
+  table.querySelectorAll('thead th[data-col]').forEach(function(th) {
+    var col = th.getAttribute('data-col');
+    if (FIXED_COLS.indexOf(col) >= 0) return; // 관리 컬럼은 항상 표시
+
+    var label = document.createElement('label');
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = hidden.indexOf(col) < 0;
+    cb.dataset.col = col;
+    cb.addEventListener('change', function() {
+      var h = getHiddenCols();
+      if (this.checked) {
+        h = h.filter(function(c){ return c !== col; });
+      } else {
+        if (h.indexOf(col) < 0) h.push(col);
+      }
+      saveHiddenCols(h);
+      applyColVisibility();
+    });
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(' ' + col));
+    container.appendChild(label);
+  });
+}
+
+function toggleColFilter() {
+  var panel = document.getElementById('colFilterPanel');
+  panel.classList.toggle('open');
+}
+
+// 초기화
+(function() {
+  buildColFilterUI();
+  applyColVisibility();
+})();
 </script>
 </body>
 </html>

@@ -10,19 +10,19 @@
   body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background: #f5f7fa; color: #333; }
 
   .nav {
-    background: #1a1a2e;
+    background: #fff;
     padding: 0 30px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     height: 60px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
   }
-  .nav-brand { color: #fff; font-size: 18px; font-weight: 700; text-decoration: none; }
+  .nav-brand { color: #1565c0; font-size: 18px; font-weight: 700; text-decoration: none; }
   .nav-user span { color: rgba(255,255,255,0.7); font-size: 14px; }
 
   .container { max-width: 760px; margin: 0 auto; padding: 30px 20px; }
-  .page-title { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+  .page-title { font-size: 22px; font-weight: 700; color: #1565c0; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
 
   .card {
     background: #fff;
@@ -59,7 +59,7 @@
   }
   input:focus, select:focus, textarea:focus {
     outline: none;
-    border-color: #0f3460;
+    border-color: #1976d2;
     box-shadow: 0 0 0 3px rgba(15,52,96,0.1);
     background: #fff;
   }
@@ -79,7 +79,7 @@
   }
   .btn-cancel:hover { background: #eee; }
   .btn-submit {
-    background: #0f3460;
+    background: #1976d2;
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -89,7 +89,7 @@
     cursor: pointer;
     transition: background 0.2s;
   }
-  .btn-submit:hover { background: #16213e; }
+  .btn-submit:hover { background: #1565c0; }
 </style>
 </head>
 <body>

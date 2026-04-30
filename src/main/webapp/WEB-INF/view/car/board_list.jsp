@@ -14,21 +14,21 @@
 
   /* 상단 네비 */
   .nav {
-    background: #1a1a2e;
+    background: #fff;
     padding: 0 30px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     height: 60px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
   }
-  .nav-brand { color: #fff; font-size: 18px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+  .nav-brand { color: #1565c0; font-size: 18px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 8px; }
   .nav-user { display: flex; align-items: center; gap: 12px; }
-  .nav-user span { color: rgba(255,255,255,0.7); font-size: 14px; }
+  .nav-user span { color: #555; font-size: 14px; }
   .btn-logout {
-    background: rgba(255,255,255,0.1);
-    color: rgba(255,255,255,0.8);
-    border: 1px solid rgba(255,255,255,0.2);
+    background: #f5f7fa;
+    color: #555;
+    border: 1px solid #dde3ed;
     border-radius: 6px;
     padding: 6px 14px;
     font-size: 13px;
@@ -36,16 +36,16 @@
     text-decoration: none;
     transition: background 0.2s;
   }
-  .btn-logout:hover { background: rgba(255,255,255,0.2); }
+  .btn-logout:hover { background: #e8edf5; }
 
   /* 컨텐츠 영역 */
   .container { max-width: 1100px; margin: 0 auto; padding: 30px 20px; }
 
   /* 상단 타이틀 + 버튼 */
   .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-  .page-title { font-size: 22px; font-weight: 700; color: #1a1a2e; }
+  .page-title { font-size: 22px; font-weight: 700; color: #1565c0; }
   .btn-write {
-    background: #0f3460;
+    background: #1976d2;
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -59,7 +59,7 @@
     align-items: center;
     gap: 6px;
   }
-  .btn-write:hover { background: #16213e; }
+  .btn-write:hover { background: #1565c0; }
 
   /* 테이블 */
   .card {
@@ -69,13 +69,13 @@
     overflow: hidden;
   }
   table { width: 100%; border-collapse: collapse; }
-  thead { background: #1a1a2e; }
-  thead th { color: rgba(255,255,255,0.9); padding: 14px 16px; font-size: 13px; font-weight: 600; text-align: left; }
+  thead { background: #1976d2; }
+  thead th { color: rgba(255,255,255,0.95); padding: 14px 16px; font-size: 13px; font-weight: 600; text-align: left; }
   tbody tr { border-bottom: 1px solid #f0f0f0; transition: background 0.15s; }
   tbody tr:hover { background: #f8f9ff; }
   tbody tr:last-child { border-bottom: none; }
   tbody td { padding: 14px 16px; font-size: 14px; color: #444; vertical-align: middle; }
-  .car-name-cell { font-weight: 600; color: #1a1a2e; }
+  .car-name-cell { font-weight: 600; color: #1565c0; }
   .type-badge {
     display: inline-block;
     padding: 3px 10px;
@@ -89,7 +89,7 @@
   .type-badge.brake { background: #fef7e0; color: #f9ab00; }
   .type-badge.wash { background: #e6f4ea; color: #34a853; }
   .type-badge.etc { background: #f1f3f4; color: #5f6368; }
-  .cost-cell { font-weight: 600; color: #0f3460; }
+  .cost-cell { font-weight: 600; color: #1565c0; }
   .detail-link { color: #1a73e8; text-decoration: none; font-weight: 500; }
   .detail-link:hover { text-decoration: underline; }
 
@@ -115,7 +115,7 @@
   }
   .summary-icon { font-size: 32px; }
   .summary-label { font-size: 12px; color: #888; margin-bottom: 4px; }
-  .summary-value { font-size: 22px; font-weight: 700; color: #1a1a2e; }
+  .summary-value { font-size: 22px; font-weight: 700; color: #1565c0; }
 </style>
 </head>
 <body>

@@ -9,10 +9,12 @@ import my.prac.core.car.dto.CarTransportFileDto;
 public interface CarTransportService {
     List<CarTransportDto>     getList(Map<String, Object> params);
     CarTransportDto           getDetail(int id);
+    List<String>              getDistinctDriverNames();
+    List<String>              getDistinctCompanies();
     void                      insert(CarTransportDto dto);
     void                      insertBatch(List<CarTransportDto> list);
     void                      update(CarTransportDto dto);
-    void                      delete(int id);
+    void                      softDelete(int id);
 
     // 장표(파일첨부) 관련
     List<CarTransportFileDto> getFileList(int transportId);

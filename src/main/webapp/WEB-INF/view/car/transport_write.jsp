@@ -10,8 +10,8 @@
   body { font-family: 'Apple SD Gothic Neo','Malgun Gothic', sans-serif; background: #f0f2f5; font-size: 13px; }
 
   .top-bar {
-    background: #1e3a5f;
-    color: #fff;
+    background: #fff;
+    color: #1565c0;
     padding: 0 16px;
     height: 52px;
     display: flex;
@@ -19,16 +19,17 @@
     position: sticky;
     top: 0;
     z-index: 100;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
   }
-  .top-bar h1 { font-size: 16px; font-weight: 700; }
+  .top-bar h1 { font-size: 16px; font-weight: 700; color: #1565c0; }
   .back-btn {
-    color: rgba(255,255,255,0.75);
+    color: #1976d2;
     text-decoration: none;
     font-size: 13px;
     margin-left: auto;
-    padding: 6px 0 6px 16px; /* 터치 영역 확보 */
+    padding: 6px 0 6px 16px;
   }
-  .back-btn:hover { color: #fff; }
+  .back-btn:hover { color: #1565c0; }
 
   .container { padding: 16px 14px; max-width: 760px; margin: 0 auto; }
 
@@ -41,10 +42,10 @@
   .form-card h2 {
     font-size: 15px;
     font-weight: 700;
-    color: #1e3a5f;
+    color: #1565c0;
     margin-bottom: 18px;
     padding-bottom: 12px;
-    border-bottom: 2px solid #1e3a5f;
+    border-bottom: 2px solid #1976d2;
   }
 
   .form-grid {
@@ -65,8 +66,8 @@
   }
   .form-group input:focus, .form-group select:focus {
     outline: none;
-    border-color: #1e3a5f;
-    box-shadow: 0 0 0 3px rgba(30,58,95,0.10);
+    border-color: #1976d2;
+    box-shadow: 0 0 0 3px rgba(25,118,210,0.10);
   }
   .price-hint { font-size: 11px; color: #999; }
 
@@ -97,9 +98,9 @@
     font-weight: 600;
     touch-action: manipulation;
   }
-  .btn-submit { background: #1e3a5f; color: #fff; }
+  .btn-submit { background: #1976d2; color: #fff; }
   .btn-cancel { background: #eee; color: #555; }
-  .btn-submit:active { background: #163060; }
+  .btn-submit:active { background: #1565c0; }
 
   /* ===== 모바일 ===== */
   @media (max-width: 600px) {
