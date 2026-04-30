@@ -61,7 +61,7 @@
     <select id="getDistinctDriverNames" resultType="string">
         SELECT DISTINCT DRIVER_NAME
         FROM TCAR_TRANSPORT
-        WHERE IS_HIDDEN = 0 AND DRIVER_NAME IS NOT NULL AND DRIVER_NAME != ''
+        WHERE IS_HIDDEN = 0 AND DRIVER_NAME IS NOT NULL
         ORDER BY DRIVER_NAME
     </select>
 
@@ -69,7 +69,7 @@
     <select id="getDistinctCompanies" resultType="string">
         SELECT DISTINCT COMPANY
         FROM TCAR_TRANSPORT
-        WHERE IS_HIDDEN = 0 AND COMPANY IS NOT NULL AND COMPANY != ''
+        WHERE IS_HIDDEN = 0 AND COMPANY IS NOT NULL 
         ORDER BY COMPANY
     </select>
 
