@@ -59,18 +59,18 @@
 
     <!-- 기사님 이름 목록 (기존 등록자) -->
     <select id="getDistinctDriverNames" resultType="string">
-        SELECT DISTINCT DRIVER_NAME
+        SELECT DISTINCT TRIM(DRIVER_NAME) AS DRIVER_NAME
         FROM TCAR_TRANSPORT
-        WHERE IS_HIDDEN = 0 AND DRIVER_NAME IS NOT NULL
-        ORDER BY DRIVER_NAME
+        WHERE IS_HIDDEN = 0 AND TRIM(DRIVER_NAME) IS NOT NULL
+        ORDER BY 1
     </select>
 
     <!-- 회사명 목록 (기존 등록자) -->
     <select id="getDistinctCompanies" resultType="string">
-        SELECT DISTINCT COMPANY
+        SELECT DISTINCT TRIM(COMPANY) AS COMPANY
         FROM TCAR_TRANSPORT
-        WHERE IS_HIDDEN = 0 AND COMPANY IS NOT NULL 
-        ORDER BY COMPANY
+        WHERE IS_HIDDEN = 0 AND TRIM(COMPANY) IS NOT NULL
+        ORDER BY 1
     </select>
 
     <insert id="insert" parameterType="my.prac.core.car.dto.CarTransportDto">
