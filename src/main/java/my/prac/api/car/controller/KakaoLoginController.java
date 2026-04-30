@@ -89,7 +89,10 @@ public class KakaoLoginController {
             cookie.setPath("/");
             response.addCookie(cookie);
 
-            return "redirect:/car/board/list";
+            String redirectUrl = (String) session.getAttribute("redirectAfterLogin");
+            session.removeAttribute("redirectAfterLogin");
+            if (redirectUrl == null || redirectUrl.isEmpty()) redirectUrl = "/transport/list";
+            return "redirect:" + redirectUrl;
         } catch (Exception e) {
             logger.error("Kakao login failed", e);
             return "redirect:/car/login?error=server";

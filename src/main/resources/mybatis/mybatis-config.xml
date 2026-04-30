@@ -11,7 +11,6 @@
     </settings>
 
 	<mappers>
-		<mapper resource="mybatis/mapper2.0/CarMaintenanceMapper.xml" />
 		<mapper resource="mybatis/mapper2.0/TuserKakaoMapper.xml" />
 		<mapper resource="mybatis/mapper2.0/CarTransportMapper.xml" />
 	</mappers>

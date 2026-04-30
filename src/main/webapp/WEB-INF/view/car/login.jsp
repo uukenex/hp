@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>자동차 관리기록부 - 로그인</title>
+<title>운송내역관리 - 로그인</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -95,9 +95,9 @@
 <body>
 
 <div class="login-card">
-  <div class="car-icon">&#x1F697;</div>
-  <h1>자동차 관리기록부</h1>
-  <p class="subtitle">내 차의 정비 이력을 한눈에 관리하세요</p>
+  <div class="car-icon">&#x1F69A;</div>
+  <h1>운송내역관리</h1>
+  <p class="subtitle">차량 운송 내역을 한눈에 관리하세요</p>
 
   <%-- 에러 메시지 --%>
   <% if ("kakao".equals(request.getParameter("error"))) { %>
@@ -114,7 +114,7 @@
   </a>
 
   <div class="features">
-    <div class="feature-item"><span class="icon">&#x1F527;</span>정비 기록</div>
+    <div class="feature-item"><span class="icon">&#x1F69A;</span>운송 기록</div>
     <div class="feature-item"><span class="icon">&#x1F4C5;</span>이력 관리</div>
     <div class="feature-item"><span class="icon">&#x1F4B0;</span>비용 추적</div>
   </div>
