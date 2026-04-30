@@ -9,35 +9,34 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    background: #f5f7fa;
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
   }
   .login-card {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: #fff;
+    border: 1px solid #dde3ed;
     border-radius: 20px;
     padding: 60px 50px;
     text-align: center;
-    backdrop-filter: blur(10px);
     max-width: 420px;
     width: 90%;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
   }
   .car-icon {
     font-size: 64px;
     margin-bottom: 20px;
   }
   h1 {
-    color: #fff;
+    color: #1565c0;
     font-size: 26px;
     font-weight: 700;
     margin-bottom: 8px;
   }
   .subtitle {
-    color: rgba(255,255,255,0.5);
+    color: #888;
     font-size: 14px;
     margin-bottom: 40px;
   }
@@ -83,10 +82,10 @@
     justify-content: center;
     margin-top: 36px;
     padding-top: 30px;
-    border-top: 1px solid rgba(255,255,255,0.1);
+    border-top: 1px solid #eee;
   }
   .feature-item {
-    color: rgba(255,255,255,0.5);
+    color: #aaa;
     font-size: 12px;
     text-align: center;
   }

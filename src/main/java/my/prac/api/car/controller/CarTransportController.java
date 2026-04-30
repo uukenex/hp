@@ -1,6 +1,9 @@
 package my.prac.api.car.controller;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +34,16 @@ public class CarTransportController {
                        @RequestParam(required = false) String driverName,
                        @RequestParam(required = false) String company,
                        Model model) {
+
+        // 날짜 기본값: 당월 1일 ~ 오늘
+        if (dateFrom == null && dateTo == null) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            Calendar cal = Calendar.getInstance();
+            cal.set(Calendar.DAY_OF_MONTH, 1);
+            dateFrom = sdf.format(cal.getTime());
+            dateTo   = sdf.format(new Date());
+        }
+
         Map<String, Object> params = new HashMap<>();
         params.put("dateFrom",   dateFrom);
         params.put("dateTo",     dateTo);
@@ -49,6 +62,8 @@ public class CarTransportController {
         model.addAttribute("dateTo",       dateTo);
         model.addAttribute("driverName",   driverName);
         model.addAttribute("company",      company);
+        model.addAttribute("driverNames",  carTransportService.getDistinctDriverNames());
+        model.addAttribute("companies",    carTransportService.getDistinctCompanies());
         return "car/transport_list";
     }
 
@@ -78,7 +93,7 @@ public class CarTransportController {
 
     @PostMapping("/delete/{id}")
     public String delete(@PathVariable int id) {
-        carTransportService.delete(id);
+        carTransportService.softDelete(id);
         return "redirect:/transport/list";
     }
 

@@ -12,9 +12,11 @@ import my.prac.core.car.dto.CarTransportFileDto;
 public interface CarTransportDAO {
     List<CarTransportDto>     getList(Map<String, Object> params);
     CarTransportDto           getDetail(int id);
+    List<String>              getDistinctDriverNames();
+    List<String>              getDistinctCompanies();
     int                       insert(CarTransportDto dto);
     int                       update(CarTransportDto dto);
-    int                       delete(int id);
+    int                       softDelete(int id);
 
     // 장표(파일첨부) 관련
     List<CarTransportFileDto> getFileList(int transportId);

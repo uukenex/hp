@@ -3,6 +3,7 @@
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="my.prac.core.car.dao.CarTransportDAO">
+
     <!-- ==================== 운송 CRUD ==================== -->
 
     <select id="getList" parameterType="map" resultType="my.prac.core.car.dto.CarTransportDto">
@@ -17,9 +18,11 @@
             VEHICLE_NO,
             SUPPLY_PRICE,
             COMPANY_PRICE,
+            IS_HIDDEN,
             TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT
         FROM TCAR_TRANSPORT
         <where>
+            AND IS_HIDDEN = 0
             <if test="dateFrom != null and dateFrom != ''">
                 AND TRANSPORT_DATE &gt;= TO_DATE(#{dateFrom}, 'YYYY-MM-DD')
             </if>
@@ -48,22 +51,39 @@
             VEHICLE_NO,
             SUPPLY_PRICE,
             COMPANY_PRICE,
+            IS_HIDDEN,
             TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT
         FROM TCAR_TRANSPORT
         WHERE ID = #{id}
+    </select>
+
+    <!-- 기사님 이름 목록 (기존 등록자) -->
+    <select id="getDistinctDriverNames" resultType="string">
+        SELECT DISTINCT DRIVER_NAME
+        FROM TCAR_TRANSPORT
+        WHERE IS_HIDDEN = 0 AND DRIVER_NAME IS NOT NULL AND DRIVER_NAME != ''
+        ORDER BY DRIVER_NAME
+    </select>
+
+    <!-- 회사명 목록 (기존 등록자) -->
+    <select id="getDistinctCompanies" resultType="string">
+        SELECT DISTINCT COMPANY
+        FROM TCAR_TRANSPORT
+        WHERE IS_HIDDEN = 0 AND COMPANY IS NOT NULL AND COMPANY != ''
+        ORDER BY COMPANY
     </select>
 
     <insert id="insert" parameterType="my.prac.core.car.dto.CarTransportDto">
         INSERT INTO TCAR_TRANSPORT (
             ID, TRANSPORT_DATE, DRIVER_NAME, COMPANY,
             LOADING_POINT, UNLOADING_POINT, CAR_MODEL, VEHICLE_NO,
-            SUPPLY_PRICE, COMPANY_PRICE, CREATED_AT
+            SUPPLY_PRICE, COMPANY_PRICE, IS_HIDDEN, CREATED_AT
         ) VALUES (
             TCAR_TRANSPORT_SEQ.NEXTVAL,
             TO_DATE(#{transportDate}, 'YYYY-MM-DD'),
             #{driverName}, #{company},
             #{loadingPoint}, #{unloadingPoint}, #{carModel}, #{vehicleNo},
-            #{supplyPrice}, #{companyPrice}, SYSDATE
+            #{supplyPrice}, #{companyPrice}, 0, SYSDATE
         )
     </insert>
 
@@ -81,37 +101,26 @@
         WHERE ID = #{id}
     </update>
 
-    <delete id="delete" parameterType="int">
-        DELETE FROM TCAR_TRANSPORT WHERE ID = #{id}
-    </delete>
+    <!-- 소프트 삭제 (hidden 처리) -->
+    <update id="softDelete" parameterType="int">
+        UPDATE TCAR_TRANSPORT SET IS_HIDDEN = 1 WHERE ID = #{id}
+    </update>
 
     <!-- ==================== 장표(첨부파일) CRUD ==================== -->
 
     <select id="getFileList" parameterType="int" resultType="my.prac.core.car.dto.CarTransportFileDto">
-        SELECT
-            FILE_ID,
-            TRANSPORT_ID,
-            ORIGINAL_NAME,
-            SAVED_NAME,
-            FILE_PATH,
-            FILE_SIZE,
-            FILE_EXT,
-            TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT
+        SELECT FILE_ID, TRANSPORT_ID, ORIGINAL_NAME, SAVED_NAME,
+               FILE_PATH, FILE_SIZE, FILE_EXT,
+               TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT
         FROM TCAR_TRANSPORT_FILE
         WHERE TRANSPORT_ID = #{transportId}
         ORDER BY FILE_ID ASC
     </select>
 
     <select id="getFileDetail" parameterType="int" resultType="my.prac.core.car.dto.CarTransportFileDto">
-        SELECT
-            FILE_ID,
-            TRANSPORT_ID,
-            ORIGINAL_NAME,
-            SAVED_NAME,
-            FILE_PATH,
-            FILE_SIZE,
-            FILE_EXT,
-            TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT
+        SELECT FILE_ID, TRANSPORT_ID, ORIGINAL_NAME, SAVED_NAME,
+               FILE_PATH, FILE_SIZE, FILE_EXT,
+               TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT
         FROM TCAR_TRANSPORT_FILE
         WHERE FILE_ID = #{fileId}
     </select>

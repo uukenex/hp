@@ -15,6 +15,7 @@ public class CarTransportDto implements Serializable {
     private String vehicleNo;
     private long   supplyPrice;
     private long   companyPrice;
+    private int    isHidden;
     private String createdAt;
 
     public int getId() { return id; }
@@ -46,6 +47,9 @@ public class CarTransportDto implements Serializable {
 
     public long getCompanyPrice() { return companyPrice; }
     public void setCompanyPrice(long companyPrice) { this.companyPrice = companyPrice; }
+
+    public int getIsHidden() { return isHidden; }
+    public void setIsHidden(int isHidden) { this.isHidden = isHidden; }
 
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }

@@ -11,8 +11,8 @@
 
   /* 상단바 */
   .top-bar {
-    background: #1e3a5f;
-    color: #fff;
+    background: #fff;
+    color: #1565c0;
     padding: 0 16px;
     height: 52px;
     display: flex;
@@ -21,11 +21,12 @@
     position: sticky;
     top: 0;
     z-index: 200;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
   }
-  .top-bar h1 { font-size: 16px; font-weight: 700; }
+  .top-bar h1 { font-size: 16px; font-weight: 700; color: #1565c0; }
   .nav-links { display: flex; gap: 14px; align-items: center; }
-  .nav-links a { color: rgba(255,255,255,0.75); text-decoration: none; font-size: 12px; }
-  .nav-links a:hover { color: #fff; }
+  .nav-links a { color: #1976d2; text-decoration: none; font-size: 12px; }
+  .nav-links a:hover { color: #1565c0; }
 
   /* 툴바 */
   .toolbar {
@@ -58,11 +59,11 @@
   }
   .btn-add-row  { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
   .btn-del-rows { background: #fde8e8; color: #c62828; border: 1px solid #ef9a9a; }
-  .btn-save     { background: #1e3a5f; color: #fff; padding: 8px 22px; }
-  .btn-paste-help { background: #e8edf5; color: #1e3a5f; border: 1px solid #b0bec5; font-size: 12px; }
+  .btn-save     { background: #1976d2; color: #fff; padding: 8px 22px; }
+  .btn-paste-help { background: #e8edf5; color: #1565c0; border: 1px solid #b0bec5; font-size: 12px; }
   .btn-add-row:hover  { background: #c8e6c9; }
   .btn-del-rows:hover { background: #ffcdd2; }
-  .btn-save:hover     { background: #163060; }
+  .btn-save:hover     { background: #1565c0; }
 
   .row-count { font-size: 12px; color: #888; white-space: nowrap; }
 
@@ -80,7 +81,7 @@
     width: 100%;
   }
   .grid-table thead th {
-    background: #1e3a5f;
+    background: #1976d2;
     color: #fff;
     padding: 9px 8px;
     font-size: 12px;
@@ -88,11 +89,11 @@
     white-space: nowrap;
     position: sticky;
     top: 0;
-    border-right: 1px solid rgba(255,255,255,0.15);
+    border-right: 1px solid rgba(255,255,255,0.2);
     user-select: none;
   }
   .grid-table thead th.th-check { width: 36px; }
-  .grid-table thead th.th-no    { width: 40px; color: rgba(255,255,255,0.6); }
+  .grid-table thead th.th-no    { width: 40px; color: rgba(255,255,255,0.7); }
   .grid-table thead th.th-date  { width: 130px; }
   .grid-table thead th.th-driver{ width: 90px; }
   .grid-table thead th.th-co    { width: 100px; }
@@ -209,12 +210,12 @@
     max-width: 480px;
     width: 90%;
   }
-  .paste-guide-box h3 { font-size: 16px; color: #1e3a5f; margin-bottom: 14px; }
+  .paste-guide-box h3 { font-size: 16px; color: #1565c0; margin-bottom: 14px; }
   .paste-guide-box table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 16px; }
   .paste-guide-box th { background: #f0f2f5; padding: 6px 8px; border: 1px solid #dde1e7; }
   .paste-guide-box td { padding: 6px 8px; border: 1px solid #eee; color: #555; }
   .paste-guide-box p  { font-size: 12px; color: #888; margin-bottom: 16px; line-height: 1.7; }
-  .close-guide { background: #1e3a5f; color: #fff; border: none; border-radius: 6px; padding: 9px 22px; cursor: pointer; font-size: 13px; font-weight: 600; }
+  .close-guide { background: #1976d2; color: #fff; border: none; border-radius: 6px; padding: 9px 22px; cursor: pointer; font-size: 13px; font-weight: 600; }
 
   /* 저장 버튼 고정 (모바일) */
   .save-fab {
@@ -222,7 +223,7 @@
     position: fixed;
     bottom: 18px;
     right: 16px;
-    background: #1e3a5f;
+    background: #1976d2;
     color: #fff;
     border: none;
     border-radius: 28px;

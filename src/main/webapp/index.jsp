@@ -9,7 +9,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    background: #f5f7fa;
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -20,14 +20,14 @@
     padding: 40px 20px;
   }
   h1 {
-    color: #fff;
+    color: #1565c0;
     font-size: 28px;
     font-weight: 700;
     margin-bottom: 8px;
     letter-spacing: -0.5px;
   }
   .sub {
-    color: rgba(255,255,255,0.4);
+    color: #888;
     font-size: 13px;
     margin-bottom: 48px;
   }
@@ -38,27 +38,27 @@
     flex-wrap: wrap;
   }
   .card {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.12);
+    background: #fff;
+    border: 1px solid #dde3ed;
     border-radius: 16px;
     padding: 36px 32px;
     width: 200px;
     text-decoration: none;
-    transition: transform 0.15s, background 0.15s;
-    backdrop-filter: blur(8px);
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
   }
   .card:hover {
     transform: translateY(-4px);
-    background: rgba(255,255,255,0.1);
+    box-shadow: 0 8px 24px rgba(21,101,192,0.15);
   }
   .card .icon { font-size: 44px; display: block; margin-bottom: 14px; }
   .card .label {
-    color: #fff;
+    color: #1565c0;
     font-size: 15px;
     font-weight: 600;
   }
   .card .desc {
-    color: rgba(255,255,255,0.45);
+    color: #888;
     font-size: 12px;
     margin-top: 6px;
   }

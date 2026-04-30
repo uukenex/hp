@@ -12,16 +12,16 @@
   body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background: #f5f7fa; color: #333; }
 
   .nav {
-    background: #1a1a2e;
+    background: #fff;
     padding: 0 30px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     height: 60px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
   }
-  .nav-brand { color: #fff; font-size: 18px; font-weight: 700; text-decoration: none; }
-  .nav-user span { color: rgba(255,255,255,0.7); font-size: 14px; }
+  .nav-brand { color: #1565c0; font-size: 18px; font-weight: 700; text-decoration: none; }
+  .nav-user span { color: #555; font-size: 14px; }
 
   .container { max-width: 760px; margin: 0 auto; padding: 30px 20px; }
   .breadcrumb { font-size: 13px; color: #999; margin-bottom: 20px; }
@@ -37,7 +37,7 @@
   }
 
   .card-header {
-    background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
     padding: 28px 32px;
     color: #fff;
   }
@@ -53,8 +53,8 @@
   .info-item:nth-child(odd) { padding-right: 24px; border-right: 1px solid #f5f5f5; }
   .info-item:nth-child(even) { padding-left: 24px; }
   .info-label { font-size: 12px; color: #999; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-  .info-value { font-size: 15px; color: #1a1a2e; font-weight: 500; }
-  .info-value.cost { font-size: 20px; font-weight: 700; color: #0f3460; }
+  .info-value { font-size: 15px; color: #1565c0; font-weight: 500; }
+  .info-value.cost { font-size: 20px; font-weight: 700; color: #1565c0; }
 
   .type-badge {
     display: inline-block;
@@ -96,7 +96,7 @@
     text-decoration: none;
   }
   .btn-edit {
-    background: #0f3460;
+    background: #1976d2;
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -107,7 +107,7 @@
     text-decoration: none;
     transition: background 0.2s;
   }
-  .btn-edit:hover { background: #16213e; }
+  .btn-edit:hover { background: #1565c0; }
   .btn-delete {
     background: #fff;
     color: #e53935;
