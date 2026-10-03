@@ -28,6 +28,8 @@
   }
   .month-btn.active { background: #1976d2; border-color: #1976d2; color: #fff; }
   .toolbar .spacer { flex: 1; }
+  .filter-in { border: 1px solid #ccc; border-radius: 6px; padding: 7px 10px; font-size: 13px; width: 120px; }
+  .filter-in:focus { outline: none; border-color: #1976d2; }
   .save-status { font-size: 12px; color: #888; min-width: 90px; text-align: right; }
   .save-status.saving { color: #f57c00; }
   .save-status.saved  { color: #2e7d32; }
@@ -131,6 +133,8 @@
   <div class="toolbar">
     <div id="monthBtns" style="display:flex;gap:6px;"></div>
     <span class="spacer"></span>
+    <input type="text" id="fDriver" class="filter-in" placeholder="기사님 조회" list="driverNameList" autocomplete="off">
+    <input type="text" id="fCompany" class="filter-in" placeholder="회사 조회" list="companyList" autocomplete="off">
     <span class="save-status" id="saveStatus"></span>
     <button type="button" class="btn-col-filter" onclick="toggleColFilter()">⚙ 컬럼</button>
   </div>
@@ -331,7 +335,8 @@ function ensureBlankRow() {
 }
 
 function renumber() {
-  rows.forEach(function(r, i){ r.tr.firstChild.textContent = i + 1; });
+  var n = 0;
+  rows.forEach(function(r){ r.tr.firstChild.textContent = r.tr.style.display === "none" ? "" : ++n; });
 }
 
 /* ===== 편집 / 자동저장 ===== */
@@ -341,6 +346,7 @@ function onEdit(row, inp) {
     var raw = inp.value.replace(/[^0-9]/g, '');
     inp.value = raw ? parseInt(raw, 10).toLocaleString('ko-KR') : '';
   }
+  row.touched = true; // 편집한 행은 조회 필터에 가려지지 않게
   refreshRowState(row);
   ensureBlankRow();
   updateTotals();
@@ -348,7 +354,11 @@ function onEdit(row, inp) {
 }
 
 function onCommit(row, inp) {
-  if (row.timer || row.dirty) scheduleSave(row, 0);
+  // 다른 칸으로 이동하는 중일 수 있으므로 포커스 이동이 끝난 뒤 판단
+  setTimeout(function() {
+    if (autoRemoveIfBlank(row)) return;
+    if (row.timer || row.dirty) scheduleSave(row, 0);
+  }, 0);
 }
 
 function scheduleSave(row, delay) {
@@ -373,6 +383,8 @@ function collect(row) {
 function saveRow(row) {
   clearTimeout(row.timer);
   row.timer = null;
+  if (row.removing) return Promise.resolve();
+  if (autoRemoveIfBlank(row)) return Promise.resolve();
   if (!row.dirty) return Promise.resolve();
   if (row.saving) return row.promise || Promise.resolve(); // 저장 중이면 끝난 뒤 dirty 로 재저장
   if (!row.inputs[DATE_IDX].value) {
@@ -427,6 +439,20 @@ document.addEventListener('visibilitychange', function() {
 function deleteRow(row) {
   if (row.id === 0 && isBlank(row)) return;
   if (!confirm('삭제하시겠습니까?\n(숨김 처리되며 실제 삭제되지 않습니다)')) return;
+  removeRow(row);
+}
+
+/* 날짜 외 내용이 모두 비면 자동 삭제 (포커스가 해당 행을 벗어났을 때) */
+function autoRemoveIfBlank(row) {
+  if (row.id > 0 && !row.removing && isBlank(row) && !row.tr.contains(document.activeElement)) {
+    row.removing = true;
+    removeRow(row);
+    return true;
+  }
+  return false;
+}
+
+function removeRow(row) {
   clearTimeout(row.timer);
   row.dirty = false;
   var done = function() {
@@ -440,7 +466,7 @@ function deleteRow(row) {
   var wait = row.promise || Promise.resolve();
   wait.then(function() {
     if (row.id > 0) {
-      api('/transport/api/delete/' + row.id, { method: 'POST' }).then(done).catch(function(){ setStatus('error', '삭제 실패'); });
+      api('/transport/api/delete/' + row.id, { method: 'POST' }).then(done).catch(function(){ row.removing = false; setStatus('error', '삭제 실패'); });
     } else { done(); }
   });
 }
@@ -462,11 +488,24 @@ function onKey(e, row, inp) {
   if (target) { e.preventDefault(); var t = target.inputs[col]; t.focus(); if (t.select) t.select(); }
 }
 
+/* ===== 기사님/회사 조회 (표시 중인 월 안에서 필터) ===== */
+function rowMatches(r, drv, co) {
+  if (r.touched || isBlank(r)) return true;
+  return r.inputs[1].value.toLowerCase().indexOf(drv) >= 0 && r.inputs[2].value.toLowerCase().indexOf(co) >= 0;
+}
+function applyFilter() {
+  var drv = document.getElementById("fDriver").value.trim().toLowerCase();
+  var co  = document.getElementById("fCompany").value.trim().toLowerCase();
+  rows.forEach(function(r){ r.tr.style.display = rowMatches(r, drv, co) ? "" : "none"; });
+  renumber();
+  updateTotals();
+}
+
 /* ===== 합계 ===== */
 function updateTotals() {
   var cnt = 0, s = 0, c = 0;
   rows.forEach(function(r) {
-    if (r.id === 0 && isBlank(r)) return;
+    if ((r.id === 0 && isBlank(r)) || r.tr.style.display === "none") return;
     cnt++;
     s += toNum(r.inputs[SUPPLY_IDX].value);
     c += toNum(r.inputs[COMPANY_IDX].value);
@@ -503,6 +542,7 @@ function loadMonth(ym) {
     addRow(null);
     updateTotals();
     applyColVisibility();
+    applyFilter();
     setStatus('', '');
     try { localStorage.setItem('transport_month', curMonth); } catch(e) {}
   }).catch(function() {
@@ -553,6 +593,8 @@ function toggleColFilter() {
 (function() {
   buildHeader();
   buildColFilterUI();
+  document.getElementById("fDriver").addEventListener("input", applyFilter);
+  document.getElementById("fCompany").addEventListener("input", applyFilter);
   loadMonth(ymOf(new Date()));
 })();
 </script>
