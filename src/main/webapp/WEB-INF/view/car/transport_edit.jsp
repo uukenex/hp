@@ -1,4 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -199,6 +200,38 @@
           <label>회사공급가 (원)</label>
           <input type="number" name="companyPrice" value="${dto.companyPrice}" min="0" inputmode="numeric">
           <span class="price-hint">고객사에 청구하는 금액</span>
+        </div>
+
+        <div class="section-label">추가 정보</div>
+
+        <div class="form-group">
+          <label>상차폰,사업자</label>
+          <input type="text" name="loadingPhone" value="<c:out value='${dto.loadingPhone}'/>" maxlength="200">
+        </div>
+
+        <div class="form-group">
+          <label>사진,지급</label>
+          <input type="text" name="photoPayment" value="<c:out value='${dto.photoPayment}'/>" maxlength="200">
+        </div>
+
+        <div class="form-group">
+          <label style="color:#c62828;">입금</label>
+          <input type="text" name="deposit" value="<c:out value='${dto.deposit}'/>" maxlength="200">
+        </div>
+
+        <div class="form-group">
+          <label>계산서발행</label>
+          <input type="text" name="invoiceIssued" value="<c:out value='${dto.invoiceIssued}'/>" maxlength="200">
+        </div>
+
+        <div class="form-group">
+          <label>내역서</label>
+          <input type="text" name="statementDoc" value="<c:out value='${dto.statementDoc}'/>" maxlength="200">
+        </div>
+
+        <div class="form-group full">
+          <label>비고</label>
+          <input type="text" name="remark" value="<c:out value='${dto.remark}'/>" maxlength="1000">
         </div>
 
       </div>

@@ -18,6 +18,12 @@
             VEHICLE_NO,
             SUPPLY_PRICE,
             COMPANY_PRICE,
+            LOADING_PHONE,
+            PHOTO_PAYMENT,
+            DEPOSIT,
+            INVOICE_ISSUED,
+            STATEMENT_DOC,
+            REMARK,
             IS_HIDDEN,
             TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT
         FROM TCAR_TRANSPORT
@@ -51,6 +57,12 @@
             VEHICLE_NO,
             SUPPLY_PRICE,
             COMPANY_PRICE,
+            LOADING_PHONE,
+            PHOTO_PAYMENT,
+            DEPOSIT,
+            INVOICE_ISSUED,
+            STATEMENT_DOC,
+            REMARK,
             IS_HIDDEN,
             TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT
         FROM TCAR_TRANSPORT
@@ -77,13 +89,19 @@
         INSERT INTO TCAR_TRANSPORT (
             ID, TRANSPORT_DATE, DRIVER_NAME, COMPANY,
             LOADING_POINT, UNLOADING_POINT, CAR_MODEL, VEHICLE_NO,
-            SUPPLY_PRICE, COMPANY_PRICE, IS_HIDDEN, CREATED_AT
+            SUPPLY_PRICE, COMPANY_PRICE,
+            LOADING_PHONE, PHOTO_PAYMENT, DEPOSIT, INVOICE_ISSUED, STATEMENT_DOC, REMARK,
+            IS_HIDDEN, CREATED_AT
         ) VALUES (
             TCAR_TRANSPORT_SEQ.NEXTVAL,
             TO_DATE(#{transportDate}, 'YYYY-MM-DD'),
             #{driverName}, #{company},
             #{loadingPoint}, #{unloadingPoint}, #{carModel}, #{vehicleNo},
-            #{supplyPrice}, #{companyPrice}, 0, SYSDATE
+            #{supplyPrice}, #{companyPrice},
+            #{loadingPhone, jdbcType=VARCHAR}, #{photoPayment, jdbcType=VARCHAR},
+            #{deposit, jdbcType=VARCHAR}, #{invoiceIssued, jdbcType=VARCHAR},
+            #{statementDoc, jdbcType=VARCHAR}, #{remark, jdbcType=VARCHAR},
+            0, SYSDATE
         )
     </insert>
 
@@ -97,7 +115,13 @@
             CAR_MODEL       = #{carModel},
             VEHICLE_NO      = #{vehicleNo},
             SUPPLY_PRICE    = #{supplyPrice},
-            COMPANY_PRICE   = #{companyPrice}
+            COMPANY_PRICE   = #{companyPrice},
+            LOADING_PHONE   = #{loadingPhone, jdbcType=VARCHAR},
+            PHOTO_PAYMENT   = #{photoPayment, jdbcType=VARCHAR},
+            DEPOSIT         = #{deposit, jdbcType=VARCHAR},
+            INVOICE_ISSUED  = #{invoiceIssued, jdbcType=VARCHAR},
+            STATEMENT_DOC   = #{statementDoc, jdbcType=VARCHAR},
+            REMARK          = #{remark, jdbcType=VARCHAR}
         WHERE ID = #{id}
     </update>
 

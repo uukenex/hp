@@ -77,7 +77,7 @@
   /* 그리드 테이블 */
   .grid-table {
     border-collapse: collapse;
-    min-width: 1000px;
+    min-width: 1660px;
     width: 100%;
   }
   .grid-table thead th {
@@ -103,6 +103,7 @@
   .grid-table thead th.th-vin   { width: 100px; }
   .grid-table thead th.th-price { width: 100px; }
   .grid-table thead th.th-cprice{ width: 100px; }
+  .grid-table thead th.th-extra { width: 110px; }
   .grid-table thead th.th-del   { width: 40px; border-right: none; }
 
   /* 데이터 행 */
@@ -285,6 +286,12 @@
         <th class="th-vin">차대번호</th>
         <th class="th-price">공급가</th>
         <th class="th-cprice">회사공급가</th>
+        <th class="th-extra">상차폰,사업자</th>
+        <th class="th-extra">사진,지급</th>
+        <th class="th-extra">입금</th>
+        <th class="th-extra">계산서발행</th>
+        <th class="th-extra">내역서</th>
+        <th class="th-extra">비고</th>
         <th class="th-del"></th>
       </tr>
     </thead>
@@ -307,6 +314,7 @@
         <tr>
           <th>A열</th><th>B열</th><th>C열</th><th>D열</th>
           <th>E열</th><th>F열</th><th>G열</th><th>H열</th><th>I열</th>
+          <th>J열</th><th>K열</th><th>L열</th><th>M열</th><th>N열</th><th>O열</th>
         </tr>
       </thead>
       <tbody>
@@ -320,6 +328,12 @@
           <td>차대번호</td>
           <td>공급가</td>
           <td>회사공급가</td>
+          <td>상차폰,사업자</td>
+          <td>사진,지급</td>
+          <td>입금</td>
+          <td>계산서발행</td>
+          <td>내역서</td>
+          <td>비고</td>
         </tr>
       </tbody>
     </table>
@@ -332,7 +346,8 @@
 <div class="result-msg" id="resultMsg"></div>
 
 <script>
-var COLS = ['transportDate','driverName','company','loadingPoint','unloadingPoint','carModel','vehicleNo','supplyPrice','companyPrice'];
+var COLS = ['transportDate','driverName','company','loadingPoint','unloadingPoint','carModel','vehicleNo','supplyPrice','companyPrice',
+            'loadingPhone','photoPayment','deposit','invoiceIssued','statementDoc','remark'];
 var REQUIRED = [0,1,2,3,4]; // date, driver, company, load, unload
 var rowSeq = 0;
 
@@ -360,7 +375,7 @@ function addRow(data) {
     var td = document.createElement('td');
     var inp = document.createElement('input');
     inp.name = col + '[]';
-    inp.className = 'cell-input' + (i >= 7 ? ' price-input' : '');
+    inp.className = 'cell-input' + (i === 7 || i === 8 ? ' price-input' : '');
     inp.autocomplete = 'off';
     inp.spellcheck = false;
 

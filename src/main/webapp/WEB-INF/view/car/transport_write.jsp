@@ -184,6 +184,38 @@
           <span class="price-hint">고객사에 청구하는 금액</span>
         </div>
 
+        <div class="section-label">추가 정보</div>
+
+        <div class="form-group">
+          <label>상차폰,사업자</label>
+          <input type="text" name="loadingPhone" maxlength="200">
+        </div>
+
+        <div class="form-group">
+          <label>사진,지급</label>
+          <input type="text" name="photoPayment" maxlength="200">
+        </div>
+
+        <div class="form-group">
+          <label style="color:#c62828;">입금</label>
+          <input type="text" name="deposit" maxlength="200">
+        </div>
+
+        <div class="form-group">
+          <label>계산서발행</label>
+          <input type="text" name="invoiceIssued" maxlength="200">
+        </div>
+
+        <div class="form-group">
+          <label>내역서</label>
+          <input type="text" name="statementDoc" maxlength="200">
+        </div>
+
+        <div class="form-group full">
+          <label>비고</label>
+          <input type="text" name="remark" maxlength="1000">
+        </div>
+
       </div>
 
       <div class="btn-row">

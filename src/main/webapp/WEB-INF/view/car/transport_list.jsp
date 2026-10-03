@@ -460,13 +460,19 @@
           <th data-col="차대번호">차대번호</th>
           <th data-col="공급가">공급가</th>
           <th data-col="회사공급가">회사공급가</th>
+          <th data-col="상차폰,사업자">상차폰,사업자</th>
+          <th data-col="사진,지급">사진,지급</th>
+          <th data-col="입금" style="color:#c62828;">입금</th>
+          <th data-col="계산서발행">계산서발행</th>
+          <th data-col="내역서">내역서</th>
+          <th data-col="비고">비고</th>
           <th data-col="관리">관리</th>
         </tr>
       </thead>
       <tbody>
         <c:choose>
           <c:when test="${empty list}">
-            <tr class="empty-row"><td colspan="10">등록된 운송 기록이 없습니다.</td></tr>
+            <tr class="empty-row"><td colspan="16">등록된 운송 기록이 없습니다.</td></tr>
           </c:when>
           <c:otherwise>
             <c:forEach var="item" items="${list}">
@@ -480,6 +486,12 @@
               <td data-col="차대번호">${item.vehicleNo}</td>
               <td data-col="공급가" class="td-supply"><fmt:formatNumber value="${item.supplyPrice}" pattern="#,###"/></td>
               <td data-col="회사공급가" class="td-company"><fmt:formatNumber value="${item.companyPrice}" pattern="#,###"/></td>
+              <td data-col="상차폰,사업자"><c:out value="${item.loadingPhone}"/></td>
+              <td data-col="사진,지급"><c:out value="${item.photoPayment}"/></td>
+              <td data-col="입금"><c:out value="${item.deposit}"/></td>
+              <td data-col="계산서발행"><c:out value="${item.invoiceIssued}"/></td>
+              <td data-col="내역서"><c:out value="${item.statementDoc}"/></td>
+              <td data-col="비고"><c:out value="${item.remark}"/></td>
               <td data-col="관리">
                 <button class="btn-edit" onclick="location.href='${pageContext.request.contextPath}/transport/edit/${item.id}'">수정</button>
                 <button class="btn-del" onclick="confirmDelete(${item.id})">삭제</button>
@@ -501,6 +513,12 @@
           <td data-col="차대번호"></td>
           <td data-col="공급가" class="td-supply"><fmt:formatNumber value="${totalSupply}" pattern="#,###"/></td>
           <td data-col="회사공급가" class="td-company"><fmt:formatNumber value="${totalCompany}" pattern="#,###"/></td>
+          <td data-col="상차폰,사업자"></td>
+          <td data-col="사진,지급"></td>
+          <td data-col="입금"></td>
+          <td data-col="계산서발행"></td>
+          <td data-col="내역서"></td>
+          <td data-col="비고"></td>
           <td data-col="관리"></td>
         </tr>
       </tfoot>
@@ -550,6 +568,14 @@
                 <fmt:formatNumber value="${item.companyPrice}" pattern="#,###"/>원
               </div>
             </div>
+          </div>
+          <div class="card-info">
+            <c:if test="${not empty item.loadingPhone}"><span class="tag">📞 상차폰,사업자: <c:out value="${item.loadingPhone}"/></span></c:if>
+            <c:if test="${not empty item.photoPayment}"><span class="tag">📷 사진,지급: <c:out value="${item.photoPayment}"/></span></c:if>
+            <c:if test="${not empty item.deposit}"><span class="tag" style="color:#c62828;">💰 입금: <c:out value="${item.deposit}"/></span></c:if>
+            <c:if test="${not empty item.invoiceIssued}"><span class="tag">🧾 계산서발행: <c:out value="${item.invoiceIssued}"/></span></c:if>
+            <c:if test="${not empty item.statementDoc}"><span class="tag">📄 내역서: <c:out value="${item.statementDoc}"/></span></c:if>
+            <c:if test="${not empty item.remark}"><span class="tag">📝 <c:out value="${item.remark}"/></span></c:if>
           </div>
           <div class="card-actions">
             <button class="btn-edit"

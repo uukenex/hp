@@ -114,7 +114,13 @@ public class CarTransportController {
             @RequestParam(value = "carModel[]",      required = false) List<String> carModels,
             @RequestParam(value = "vehicleNo[]",     required = false) List<String> vehicleNos,
             @RequestParam(value = "supplyPrice[]",   required = false) List<String> supplyPrices,
-            @RequestParam(value = "companyPrice[]",  required = false) List<String> companyPrices) {
+            @RequestParam(value = "companyPrice[]",  required = false) List<String> companyPrices,
+            @RequestParam(value = "loadingPhone[]",  required = false) List<String> loadingPhones,
+            @RequestParam(value = "photoPayment[]",  required = false) List<String> photoPayments,
+            @RequestParam(value = "deposit[]",       required = false) List<String> deposits,
+            @RequestParam(value = "invoiceIssued[]", required = false) List<String> invoiceIssueds,
+            @RequestParam(value = "statementDoc[]",  required = false) List<String> statementDocs,
+            @RequestParam(value = "remark[]",        required = false) List<String> remarks) {
 
         if (dates == null || dates.isEmpty()) {
             return "redirect:/transport/bulk";
@@ -144,6 +150,12 @@ public class CarTransportController {
             dto.setVehicleNo(getOrEmpty(vehicleNos, i));
             dto.setSupplyPrice(parseLong(getOrEmpty(supplyPrices, i)));
             dto.setCompanyPrice(parseLong(getOrEmpty(companyPrices, i)));
+            dto.setLoadingPhone(getOrEmpty(loadingPhones, i));
+            dto.setPhotoPayment(getOrEmpty(photoPayments, i));
+            dto.setDeposit(getOrEmpty(deposits, i));
+            dto.setInvoiceIssued(getOrEmpty(invoiceIssueds, i));
+            dto.setStatementDoc(getOrEmpty(statementDocs, i));
+            dto.setRemark(getOrEmpty(remarks, i));
             batch.add(dto);
         }
 

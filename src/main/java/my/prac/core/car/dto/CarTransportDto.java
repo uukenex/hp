@@ -15,8 +15,32 @@ public class CarTransportDto implements Serializable {
     private String vehicleNo;
     private long   supplyPrice;
     private long   companyPrice;
+    private String loadingPhone;
+    private String photoPayment;
+    private String deposit;
+    private String invoiceIssued;
+    private String statementDoc;
+    private String remark;
     private int    isHidden;
     private String createdAt;
+
+    public String getLoadingPhone() { return loadingPhone; }
+    public void setLoadingPhone(String loadingPhone) { this.loadingPhone = loadingPhone; }
+
+    public String getPhotoPayment() { return photoPayment; }
+    public void setPhotoPayment(String photoPayment) { this.photoPayment = photoPayment; }
+
+    public String getDeposit() { return deposit; }
+    public void setDeposit(String deposit) { this.deposit = deposit; }
+
+    public String getInvoiceIssued() { return invoiceIssued; }
+    public void setInvoiceIssued(String invoiceIssued) { this.invoiceIssued = invoiceIssued; }
+
+    public String getStatementDoc() { return statementDoc; }
+    public void setStatementDoc(String statementDoc) { this.statementDoc = statementDoc; }
+
+    public String getRemark() { return remark; }
+    public void setRemark(String remark) { this.remark = remark; }
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
