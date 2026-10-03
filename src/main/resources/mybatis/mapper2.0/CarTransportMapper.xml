@@ -133,6 +133,27 @@
         UPDATE TCAR_TRANSPORT SET IS_HIDDEN = 1 WHERE ID = #{id}
     </update>
 
+    <!-- ==================== 변경 이력 ==================== -->
+
+    <insert id="insertHistory" parameterType="my.prac.core.car.dto.CarTransportHistoryDto">
+        INSERT INTO TCAR_TRANSPORT_HIST (
+            HIST_ID, TRANSPORT_ID, ACTION, ROW_LABEL, DETAIL, CHANGED_BY, CHANGED_AT
+        ) VALUES (
+            TCAR_TRANSPORT_HIST_SEQ.NEXTVAL,
+            #{transportId}, #{action}, #{rowLabel, jdbcType=VARCHAR}, #{detail, jdbcType=VARCHAR},
+            #{changedBy, jdbcType=VARCHAR}, SYSDATE
+        )
+    </insert>
+
+    <select id="getHistory" parameterType="int" resultType="my.prac.core.car.dto.CarTransportHistoryDto">
+        SELECT * FROM (
+            SELECT HIST_ID, TRANSPORT_ID, ACTION, ROW_LABEL, DETAIL, CHANGED_BY,
+                   TO_CHAR(CHANGED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CHANGED_AT
+            FROM TCAR_TRANSPORT_HIST
+            ORDER BY HIST_ID DESC
+        ) WHERE ROWNUM &lt;= #{limit}
+    </select>
+
     <!-- ==================== 장표(첨부파일) CRUD ==================== -->
 
     <select id="getFileList" parameterType="int" resultType="my.prac.core.car.dto.CarTransportFileDto">

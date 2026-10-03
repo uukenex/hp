@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import my.prac.core.car.dao.CarTransportDAO;
 import my.prac.core.car.dto.CarTransportDto;
 import my.prac.core.car.dto.CarTransportFileDto;
+import my.prac.core.car.dto.CarTransportHistoryDto;
 import my.prac.core.car.service.CarTransportService;
 
 @Service("core.car.CarTransportService")
@@ -26,6 +27,8 @@ public class CarTransportServiceImpl implements CarTransportService {
     @Override public void insertBatch(List<CarTransportDto> list) { for (CarTransportDto dto : list) carTransportDAO.insert(dto); }
     @Override public void update(CarTransportDto dto)      { carTransportDAO.update(dto); }
     @Override public void softDelete(int id)               { carTransportDAO.softDelete(id); }
+    @Override public void insertHistory(CarTransportHistoryDto dto) { carTransportDAO.insertHistory(dto); }
+    @Override public List<CarTransportHistoryDto> getHistory(int limit) { return carTransportDAO.getHistory(limit); }
 
     @Override public List<CarTransportFileDto> getFileList(int transportId) { return carTransportDAO.getFileList(transportId); }
     @Override public CarTransportFileDto getFileDetail(int fileId)          { return carTransportDAO.getFileDetail(fileId); }

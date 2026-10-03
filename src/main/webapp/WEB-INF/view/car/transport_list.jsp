@@ -64,7 +64,7 @@
   /* 그리드 */
   .grid-wrap {
     background: #fff; border: 1px solid #dde3ed; border-radius: 10px;
-    overflow: auto; max-height: calc(100vh - 230px);
+    overflow: auto; height: calc(100vh - 230px); min-height: 260px;
   }
   table { border-collapse: collapse; min-width: 100%; }
   thead th {
@@ -101,16 +101,46 @@
   .foot-supply { text-align: right; color: #1565c0; }
   .foot-company { text-align: right; color: #b71c1c; }
 
+  /* 좌측 고정 열 (#, 날짜) */
+  th.th-no, td.td-no { position: sticky; left: 0; background: #fff; z-index: 3; }
+  thead th.th-no { background: #f0f4fa; z-index: 7; }
+  tfoot td.td-no { background: #e8edf5; z-index: 6; }
+  td[data-col="0"], th[data-col="0"] { position: sticky; left: 34px; background: #fff; z-index: 3; box-shadow: 1px 0 0 #dde3ed; }
+  thead th[data-col="0"] { background: #f0f4fa; z-index: 7; }
+  tfoot td[data-col="0"] { background: #e8edf5; z-index: 6; }
+  tbody tr:hover td.td-no, tbody tr:hover td[data-col="0"] { background: #f4f8ff; }
+  tbody tr.blank-row td.td-no, tbody tr.blank-row td[data-col="0"] { background: #fcfdff; }
+  #fillRow td { padding: 0; border: none; background: repeating-linear-gradient(to bottom, #fff 0, #fff 34px, #eef0f4 34px, #eef0f4 35px); }
+
+  /* 이력 팝업 */
+  .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 500; align-items: center; justify-content: center; }
+  .modal-bg.show { display: flex; }
+  .modal { background: #fff; border-radius: 12px; width: min(900px, 94vw); max-height: 86vh; display: flex; flex-direction: column; box-shadow: 0 8px 32px rgba(0,0,0,0.25); }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid #eee; font-size: 15px; font-weight: 700; color: #1565c0; }
+  .modal-head button { background: none; border: none; font-size: 20px; cursor: pointer; color: #666; }
+  .modal-body { overflow: auto; padding: 4px 18px 16px; }
+  .hist-item { border-bottom: 1px solid #eef0f4; padding: 10px 0; }
+  .hist-top { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12px; color: #777; }
+  .hist-badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; color: #fff; }
+  .hist-badge.INSERT { background: #2e7d32; } .hist-badge.UPDATE { background: #1976d2; } .hist-badge.DELETE { background: #c62828; }
+  .hist-label { font-weight: 700; color: #333; margin: 4px 0 2px; font-size: 13px; }
+  .hist-detail { white-space: pre-wrap; font-size: 12px; color: #444; background: #f7f9fc; border-radius: 6px; padding: 6px 10px; }
+  .hist-empty { text-align: center; color: #aaa; padding: 40px 0; }
+  .btn-save { background: #1976d2; color: #fff; border: none; border-radius: 6px; padding: 8px 18px; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .btn-save:active { background: #1565c0; }
+  .btn-hist { background: #fff8e1; color: #8d6e00; border: 1px solid #ffe082; border-radius: 6px; padding: 7px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .auto-note { font-size: 11px; color: #999; }
+
   /* 열 너비 */
-  .w-date { min-width: 128px; } .w-driver { min-width: 90px; } .w-co { min-width: 100px; }
-  .w-point { min-width: 150px; } .w-model { min-width: 90px; } .w-vin { min-width: 130px; }
-  .w-price { min-width: 100px; } .w-extra { min-width: 110px; } .w-remark { min-width: 180px; }
+  .w-date { min-width: 118px; } .w-driver { min-width: 78px; } .w-co { min-width: 88px; }
+  .w-point { min-width: 120px; } .w-model { min-width: 78px; } .w-vin { min-width: 105px; }
+  .w-price { min-width: 88px; } .w-extra { min-width: 96px; } .w-remark { min-width: 140px; }
 
   @media (max-width: 700px) {
     .container { padding: 8px 8px 60px; }
     .summary-row { grid-template-columns: 1fr 1fr; }
     .top-bar h1 { font-size: 14px; }
-    .grid-wrap { max-height: calc(100vh - 280px); }
+    .grid-wrap { min-height: 320px; }
     .cell { font-size: 16px; height: 40px; }
   }
 </style>
@@ -136,6 +166,9 @@
     <input type="text" id="fDriver" class="filter-in" placeholder="기사님 조회" list="driverNameList" autocomplete="off">
     <input type="text" id="fCompany" class="filter-in" placeholder="회사 조회" list="companyList" autocomplete="off">
     <span class="save-status" id="saveStatus"></span>
+    <button type="button" class="btn-save" onclick="manualSave()">💾 저장</button>
+    <span class="auto-note">저장 안 눌러도 자동저장됩니다</span>
+    <button type="button" class="btn-hist" onclick="openHistory()">🕘 변경이력</button>
     <button type="button" class="btn-col-filter" onclick="toggleColFilter()">⚙ 컬럼</button>
   </div>
 
@@ -154,10 +187,18 @@
     <table id="grid">
       <thead><tr id="headRow"></tr></thead>
       <tbody id="gridBody"></tbody>
+      <tbody id="fillBody"><tr id="fillRow"><td colspan="17"></td></tr></tbody>
       <tfoot><tr id="footRow"></tr></tfoot>
     </table>
   </div>
 
+</div>
+
+<div class="modal-bg" id="histModal" onclick="if(event.target===this)closeHistory()">
+  <div class="modal">
+    <div class="modal-head"><span>🕘 변경 이력 (최근 300건)</span><button type="button" onclick="closeHistory()">✕</button></div>
+    <div class="modal-body" id="histBody"></div>
+  </div>
 </div>
 
 <script>
@@ -241,8 +282,8 @@ function buildHeader() {
   var foot = document.getElementById('footRow');
   head.innerHTML = '';
   foot.innerHTML = '';
-  var thNo = document.createElement('th'); thNo.textContent = '#'; head.appendChild(thNo);
-  var tfNo = document.createElement('td'); foot.appendChild(tfNo);
+  var thNo = document.createElement('th'); thNo.textContent = '#'; thNo.className = 'th-no'; head.appendChild(thNo);
+  var tfNo = document.createElement('td'); tfNo.className = 'td-no'; foot.appendChild(tfNo);
   COLS.forEach(function(c, i) {
     var th = document.createElement('th');
     th.textContent = c.label;
@@ -337,6 +378,7 @@ function ensureBlankRow() {
 function renumber() {
   var n = 0;
   rows.forEach(function(r){ r.tr.firstChild.textContent = r.tr.style.display === "none" ? "" : ++n; });
+  fitGrid();
 }
 
 /* ===== 편집 / 자동저장 ===== */
@@ -588,6 +630,52 @@ function buildColFilterUI() {
 function toggleColFilter() {
   document.getElementById('colFilterPanel').classList.toggle('open');
 }
+
+/* ===== 화면 높이 채우기 ===== */
+function fitGrid() {
+  var wrap = document.querySelector('.grid-wrap');
+  var h = Math.max(260, window.innerHeight - wrap.getBoundingClientRect().top - 16);
+  wrap.style.height = h + 'px';
+  var td = document.querySelector('#fillRow td');
+  td.style.height = '0px';
+  var used = document.getElementById('grid').offsetHeight;
+  td.style.height = Math.max(0, wrap.clientHeight - used) + 'px';
+}
+window.addEventListener('resize', fitGrid);
+
+/* ===== 수동 저장 ===== */
+function manualSave() {
+  setStatus('saving', '저장 중…');
+  flushAll().then(function() {
+    if (!pending()) setStatus('saved', '저장됨 ✓', true);
+  });
+}
+
+/* ===== 변경 이력 팝업 ===== */
+function openHistory() {
+  var body = document.getElementById('histBody');
+  body.innerHTML = '<div class="hist-empty">불러오는 중…</div>';
+  document.getElementById('histModal').classList.add('show');
+  flushAll().then(function() { return api('/transport/api/history'); }).then(function(list) {
+    body.innerHTML = '';
+    if (!list.length) { body.innerHTML = '<div class="hist-empty">변경 이력이 없습니다.</div>'; return; }
+    var names = { INSERT: '등록', UPDATE: '수정', DELETE: '삭제' };
+    list.forEach(function(h) {
+      var item = document.createElement('div'); item.className = 'hist-item';
+      var top = document.createElement('div'); top.className = 'hist-top';
+      var badge = document.createElement('span'); badge.className = 'hist-badge ' + h.action; badge.textContent = names[h.action] || h.action;
+      var when = document.createElement('span'); when.textContent = h.changedAt + (h.changedBy ? ' · ' + h.changedBy : '') + ' · #' + h.transportId;
+      top.appendChild(badge); top.appendChild(when);
+      var label = document.createElement('div'); label.className = 'hist-label'; label.textContent = h.rowLabel || '';
+      var detail = document.createElement('div'); detail.className = 'hist-detail';
+      detail.textContent = (h.action === 'DELETE' ? '삭제된 내용\n' : '') + (h.detail || '');
+      item.appendChild(top); item.appendChild(label); item.appendChild(detail);
+      body.appendChild(item);
+    });
+  }).catch(function() { body.innerHTML = '<div class="hist-empty">이력을 불러오지 못했습니다.</div>'; });
+}
+function closeHistory() { document.getElementById('histModal').classList.remove('show'); }
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeHistory(); });
 
 /* ===== 초기화 ===== */
 (function() {

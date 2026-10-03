@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import my.prac.core.car.dto.CarTransportDto;
 import my.prac.core.car.dto.CarTransportFileDto;
+import my.prac.core.car.dto.CarTransportHistoryDto;
 
 @Repository("core.car.CarTransportDAO")
 public interface CarTransportDAO {
@@ -17,6 +18,10 @@ public interface CarTransportDAO {
     int                       insert(CarTransportDto dto);
     int                       update(CarTransportDto dto);
     int                       softDelete(int id);
+
+    // 변경 이력
+    int                       insertHistory(CarTransportHistoryDto dto);
+    List<CarTransportHistoryDto> getHistory(int limit);
 
     // 장표(파일첨부) 관련
     List<CarTransportFileDto> getFileList(int transportId);
