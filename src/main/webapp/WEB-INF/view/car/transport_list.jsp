@@ -112,9 +112,6 @@
   tbody tr.blank-row td.td-no, tbody tr.blank-row td[data-col="0"] { background: #fcfdff; }
   #fillRow td { padding: 0; border: none; background: repeating-linear-gradient(to bottom, #fff 0, #fff 34px, #eef0f4 34px, #eef0f4 35px); }
 
-  .prev-panel { display: none; align-items: center; gap: 6px; font-size: 12px; background: #fff; border: 1px solid #b0bec5; border-radius: 20px; padding: 4px 10px; }
-  .prev-panel.open { display: inline-flex; }
-  .prev-panel input, .prev-panel select { border: 1px solid #ccc; border-radius: 5px; padding: 4px 6px; font-size: 13px; }
   .btn-go { background: #1976d2; color: #fff; border: none; border-radius: 12px; padding: 5px 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
   #sug { display: none; position: fixed; z-index: 400; background: #fff; border: 1px solid #90a4ae; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.18); max-height: 230px; overflow-y: auto; min-width: 120px; }
   #sug .it { padding: 7px 10px; font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; gap: 14px; white-space: nowrap; }
@@ -173,11 +170,6 @@
 
   <div class="toolbar">
     <div id="monthBtns" style="display:flex;gap:6px;"></div>
-    <div id="prevPanel" class="prev-panel">
-      <input type="number" id="prevYear" min="2000" max="2100" style="width:78px;"> 년
-      <select id="prevMonth"></select>
-      <button type="button" class="btn-go" onclick="goPrevMonth()">조회</button>
-    </div>
     <span class="spacer"></span>
     <input type="text" id="fDriver" class="filter-in" placeholder="기사님 조회" list="driverNameList" autocomplete="off">
     <input type="text" id="fCompany" class="filter-in" placeholder="회사 조회" list="companyList" autocomplete="off">
@@ -208,6 +200,22 @@
     </table>
   </div>
 
+</div>
+
+<div class="modal-bg" id="prevModal" onclick="if(event.target===this)closePrevPanel()">
+  <div class="modal" style="width:min(340px,92vw);">
+    <div class="modal-head"><span>📅 조회할 년월 선택</span><button type="button" onclick="closePrevPanel()">✕</button></div>
+    <div class="modal-body" style="padding:18px;">
+      <div style="display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:18px;">
+        <input type="number" id="prevYear" min="2000" max="2100" style="width:96px;border:1px solid #ccc;border-radius:6px;padding:9px;font-size:15px;text-align:center;"> <span>년</span>
+        <select id="prevMonth" style="border:1px solid #ccc;border-radius:6px;padding:9px;font-size:15px;"></select>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button type="button" class="btn-hist" style="padding:9px 18px;" onclick="closePrevPanel()">취소</button>
+        <button type="button" class="btn-save" onclick="goPrevMonth()">조회</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="modal-bg" id="histModal" onclick="if(event.target===this)closeHistory()">
@@ -300,8 +308,6 @@ function buildMonthBtns() {
 }
 
 function togglePrevPanel() {
-  var p = document.getElementById('prevPanel');
-  if (p.classList.contains('open')) { p.classList.remove('open'); return; }
   var sel = document.getElementById('prevMonth');
   if (!sel.options.length) {
     for (var m = 1; m <= 12; m++) { var o = document.createElement('option'); o.value = pad(m); o.textContent = m + '월'; sel.appendChild(o); }
@@ -309,9 +315,10 @@ function togglePrevPanel() {
   var base = curMonth || ymOf(new Date());
   document.getElementById('prevYear').value = base.substring(0, 4);
   sel.value = base.substring(5, 7);
-  p.classList.add('open');
+  document.getElementById('prevModal').classList.add('show');   // 화면을 어둡게 하고 가운데 팝업
+  document.getElementById('prevYear').focus();
 }
-function closePrevPanel() { document.getElementById('prevPanel').classList.remove('open'); }
+function closePrevPanel() { document.getElementById('prevModal').classList.remove('show'); }
 function goPrevMonth() {
   var y = parseInt(document.getElementById('prevYear').value, 10);
   var m = document.getElementById('prevMonth').value;
@@ -733,7 +740,10 @@ function openHistory() {
   }).catch(function() { body.innerHTML = '<div class="hist-empty">이력을 불러오지 못했습니다.</div>'; });
 }
 function closeHistory() { document.getElementById('histModal').classList.remove('show'); }
-document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeHistory(); });
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { closeHistory(); closePrevPanel(); }
+  if (e.key === 'Enter' && document.getElementById('prevModal').classList.contains('show')) goPrevMonth();
+});
 
 /* ===== 자동입력 추천 (차종 / 공급가 / 회사공급가) ===== */
 var CAR_MODELS = [
