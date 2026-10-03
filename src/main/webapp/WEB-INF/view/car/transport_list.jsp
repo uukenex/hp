@@ -870,7 +870,7 @@ function priceCandidates(row, col, typed) {
     .filter(function(m) { return String(m.price) !== typed; })
     .sort(function(a, b) { return b.score - a.score || b.cnt - a.cnt; })
     .slice(0, 10)
-    .map(function(m) { return { text: m.price.toLocaleString('ko-KR'), hint: m.why + ' ' + m.cnt + '건' }; });
+    .map(function(m) { return { text: m.price.toLocaleString('ko-KR'), hint: m.why }; });
 }
 
 function onFocusCell(row, inp) {
