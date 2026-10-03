@@ -165,6 +165,13 @@ public class CarTransportController {
         return me != null && me.equals(row.getCreatedBy());
     }
 
+    /** 데이터가 있는 년월 목록 (이전 버튼 팝업용) */
+    @GetMapping("/api/months")
+    @ResponseBody
+    public List<String> apiMonths(HttpSession session) {
+        return carTransportService.getMonths(isAdmin(session) ? null : kakaoId(session));
+    }
+
     /** 변경 이력 (최근 300건) */
     @GetMapping("/api/history")
     @ResponseBody

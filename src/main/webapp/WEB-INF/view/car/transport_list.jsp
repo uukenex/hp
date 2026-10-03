@@ -206,13 +206,14 @@
   <div class="modal" style="width:min(340px,92vw);">
     <div class="modal-head"><span>📅 조회할 년월 선택</span><button type="button" onclick="closePrevPanel()">✕</button></div>
     <div class="modal-body" style="padding:18px;">
+      <div id="prevEmpty" style="display:none;text-align:center;color:#999;padding:8px 0 18px;">조회할 수 있는 데이터가 없습니다.</div>
       <div style="display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:18px;">
-        <input type="number" id="prevYear" min="2000" max="2100" style="width:96px;border:1px solid #ccc;border-radius:6px;padding:9px;font-size:15px;text-align:center;"> <span>년</span>
+        <select id="prevYear" style="border:1px solid #ccc;border-radius:6px;padding:9px;font-size:15px;" onchange="fillPrevMonths()"></select> <span>년</span>
         <select id="prevMonth" style="border:1px solid #ccc;border-radius:6px;padding:9px;font-size:15px;"></select>
       </div>
       <div style="display:flex;gap:8px;justify-content:flex-end;">
         <button type="button" class="btn-hist" style="padding:9px 18px;" onclick="closePrevPanel()">취소</button>
-        <button type="button" class="btn-save" onclick="goPrevMonth()">조회</button>
+        <button type="button" class="btn-save" id="prevGo" onclick="goPrevMonth()">조회</button>
       </div>
     </div>
   </div>
@@ -307,22 +308,53 @@ function buildMonthBtns() {
   // 이전 버튼: 최근 3개월 밖의 달을 보고 있으면 그 달을 표시
 }
 
+var availMonths = [];   // 데이터가 있는 년월 (YYYY-MM, 최신순)
+
 function togglePrevPanel() {
-  var sel = document.getElementById('prevMonth');
-  if (!sel.options.length) {
-    for (var m = 1; m <= 12; m++) { var o = document.createElement('option'); o.value = pad(m); o.textContent = m + '월'; sel.appendChild(o); }
-  }
-  var base = curMonth || ymOf(new Date());
-  document.getElementById('prevYear').value = base.substring(0, 4);
-  sel.value = base.substring(5, 7);
   document.getElementById('prevModal').classList.add('show');   // 화면을 어둡게 하고 가운데 팝업
-  document.getElementById('prevYear').focus();
+  api('/transport/api/months').then(function(list) {
+    availMonths = list || [];
+    var ySel = document.getElementById('prevYear');
+    ySel.innerHTML = '';
+    var years = [];
+    availMonths.forEach(function(ym) { var y = ym.substring(0, 4); if (years.indexOf(y) < 0) years.push(y); });
+    years.forEach(function(y) { var o = document.createElement('option'); o.value = y; o.textContent = y; ySel.appendChild(o); });
+    var has = years.length > 0;
+    document.getElementById('prevEmpty').style.display = has ? 'none' : 'block';
+    ySel.parentNode.style.display = has ? 'flex' : 'none';
+    document.getElementById('prevGo').disabled = !has;
+    if (has) {
+      var base = curMonth || ymOf(new Date());
+      ySel.value = years.indexOf(base.substring(0, 4)) >= 0 ? base.substring(0, 4) : years[0];
+      fillPrevMonths(base.substring(5, 7));
+    }
+  }).catch(function() {
+    document.getElementById('prevEmpty').textContent = '목록을 불러오지 못했습니다.';
+    document.getElementById('prevEmpty').style.display = 'block';
+    document.getElementById('prevYear').parentNode.style.display = 'none';
+    document.getElementById('prevGo').disabled = true;
+  });
+}
+
+/* 선택한 년도에 데이터가 있는 월만 표시 */
+function fillPrevMonths(preferred) {
+  var y = document.getElementById('prevYear').value;
+  var sel = document.getElementById('prevMonth');
+  sel.innerHTML = '';
+  availMonths.forEach(function(ym) {
+    if (ym.substring(0, 4) !== y) return;
+    var o = document.createElement('option');
+    o.value = ym.substring(5, 7);
+    o.textContent = parseInt(ym.substring(5, 7), 10) + '월';
+    sel.appendChild(o);
+  });
+  if (typeof preferred === 'string' && Array.prototype.some.call(sel.options, function(o) { return o.value === preferred; })) sel.value = preferred;
 }
 function closePrevPanel() { document.getElementById('prevModal').classList.remove('show'); }
 function goPrevMonth() {
   var y = parseInt(document.getElementById('prevYear').value, 10);
   var m = document.getElementById('prevMonth').value;
-  if (!y || y < 2000 || y > 2100) { alert('년도를 확인해 주세요.'); return; }
+  if (!y || !m) return;
   closePrevPanel();
   switchMonth(y + '-' + m);
 }

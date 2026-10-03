@@ -27,6 +27,7 @@ public class CarTransportServiceImpl implements CarTransportService {
     @Override public void insertBatch(List<CarTransportDto> list) { for (CarTransportDto dto : list) carTransportDAO.insert(dto); }
     @Override public void update(CarTransportDto dto)      { carTransportDAO.update(dto); }
     @Override public void softDelete(int id)               { carTransportDAO.softDelete(id); }
+    @Override public List<String> getMonths(String ownerId) { return carTransportDAO.getMonths(ownerId); }
     @Override public void insertHistory(CarTransportHistoryDto dto) { carTransportDAO.insertHistory(dto); }
     @Override public List<CarTransportHistoryDto> getHistory(int limit, String ownerId) { return carTransportDAO.getHistory(limit, ownerId); }
 

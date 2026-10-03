@@ -142,6 +142,15 @@
         UPDATE TCAR_TRANSPORT SET IS_HIDDEN = 1 WHERE ID = #{id}
     </update>
 
+    <!-- 데이터가 있는 년월 목록 -->
+    <select id="getMonths" resultType="string">
+        SELECT DISTINCT TO_CHAR(TRANSPORT_DATE, 'YYYY-MM') AS YM
+        FROM TCAR_TRANSPORT
+        WHERE IS_HIDDEN = 0
+        <if test="ownerId != null"> AND CREATED_BY = #{ownerId}</if>
+        ORDER BY 1 DESC
+    </select>
+
     <!-- ==================== 변경 이력 ==================== -->
 
     <insert id="insertHistory" parameterType="my.prac.core.car.dto.CarTransportHistoryDto">

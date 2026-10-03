@@ -19,6 +19,7 @@ public interface CarTransportDAO {
     int                       insert(CarTransportDto dto);
     int                       update(CarTransportDto dto);
     int                       softDelete(int id);
+    List<String>              getMonths(@Param("ownerId") String ownerId);
 
     // 변경 이력
     int                       insertHistory(CarTransportHistoryDto dto);

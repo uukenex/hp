@@ -16,6 +16,7 @@ public interface CarTransportService {
     void                      insertBatch(List<CarTransportDto> list);
     void                      update(CarTransportDto dto);
     void                      softDelete(int id);
+    List<String>              getMonths(String ownerId);
 
     // 변경 이력
     void                      insertHistory(CarTransportHistoryDto dto);
