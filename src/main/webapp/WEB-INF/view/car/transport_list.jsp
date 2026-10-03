@@ -183,7 +183,7 @@
     <input type="text" id="fCompany" class="filter-in" placeholder="회사 조회" list="companyList" autocomplete="off">
     <span class="save-status" id="saveStatus"></span>
     <button type="button" class="btn-save" onclick="manualSave()">💾 저장</button>
-    <span class="auto-note">저장 안 눌러도 자동저장됩니다</span>
+    <span class="auto-note">다른 행으로 이동하면 자동저장됩니다</span>
     <button type="button" class="btn-hist" onclick="openHistory()">🕘 변경이력</button>
     <button type="button" class="btn-col-filter" onclick="toggleColFilter()">⚙ 컬럼</button>
   </div>
@@ -243,6 +243,7 @@ var DATE_IDX = 0, SUPPLY_IDX = 7, COMPANY_IDX = 8;
 var rows = [];          // {id, tr, inputs[], timer, saving, dirty}
 var curMonth = '';
 var inflight = 0;       // 진행 중 저장 요청 수
+var IDLE_SAVE_MS = 20000;  // 입력을 멈춘 채 20초 이상 머물면 자동 저장 (유실 방지)
 var statusTimer = null;
 
 /* ===== 유틸 ===== */
@@ -442,7 +443,7 @@ function onEdit(row, inp) {
   ensureBlankRow();
   updateTotals();
   updateSuggest(row, inp);
-  scheduleSave(row, 800);
+  scheduleSave(row, IDLE_SAVE_MS);   // 타자마다 저장하지 않음: 행을 벗어날 때 저장, 오래 멈추면 대비용으로 저장
 }
 
 function onCommit(row, inp) {
@@ -451,7 +452,8 @@ function onCommit(row, inp) {
   // 다른 칸으로 이동하는 중일 수 있으므로 포커스 이동이 끝난 뒤 판단
   setTimeout(function() {
     if (autoRemoveIfBlank(row)) return;
-    if (row.timer || row.dirty) scheduleSave(row, 0);
+    // 같은 행의 다른 칸으로 이동한 경우에는 저장하지 않고, 행 밖으로 나갔을 때 저장
+    if ((row.timer || row.dirty) && !row.tr.contains(document.activeElement)) scheduleSave(row, 0);
   }, 0);
 }
 
