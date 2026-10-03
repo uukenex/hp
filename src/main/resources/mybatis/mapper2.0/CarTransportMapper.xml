@@ -42,7 +42,7 @@
                 AND COMPANY LIKE '%' || #{company} || '%'
             </if>
         </where>
-        ORDER BY TRANSPORT_DATE DESC, ID DESC
+        ORDER BY TRANSPORT_DATE ASC, ID ASC
     </select>
 
     <select id="getDetail" parameterType="int" resultType="my.prac.core.car.dto.CarTransportDto">
@@ -86,6 +86,9 @@
     </select>
 
     <insert id="insert" parameterType="my.prac.core.car.dto.CarTransportDto">
+        <selectKey keyProperty="id" resultType="int" order="BEFORE">
+            SELECT TCAR_TRANSPORT_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
         INSERT INTO TCAR_TRANSPORT (
             ID, TRANSPORT_DATE, DRIVER_NAME, COMPANY,
             LOADING_POINT, UNLOADING_POINT, CAR_MODEL, VEHICLE_NO,
@@ -93,7 +96,7 @@
             LOADING_PHONE, PHOTO_PAYMENT, DEPOSIT, INVOICE_ISSUED, STATEMENT_DOC, REMARK,
             IS_HIDDEN, CREATED_AT
         ) VALUES (
-            TCAR_TRANSPORT_SEQ.NEXTVAL,
+            #{id},
             TO_DATE(#{transportDate}, 'YYYY-MM-DD'),
             #{driverName}, #{company},
             #{loadingPoint}, #{unloadingPoint}, #{carModel}, #{vehicleNo},
