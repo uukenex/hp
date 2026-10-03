@@ -4,7 +4,10 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -45,35 +48,58 @@ public class CarTransportController {
         return "car/transport_list";
     }
 
-    /** 월별 조회. month=YYYY-MM (없으면 당월) */
+    /** 월별 조회. month=YYYY-MM (없으면 당월). 자동완성 목록은 해당월 + 전월 데이터만 */
     @GetMapping("/api/list")
     @ResponseBody
     public Map<String, Object> apiList(@RequestParam(required = false) String month, HttpSession session) {
         boolean admin = isAdmin(session);
         String owner = admin ? null : kakaoId(session);
-        SimpleDateFormat ym = new SimpleDateFormat("yyyy-MM");
-        if (month == null || !month.matches("\\d{4}-\\d{2}")) {
-            month = ym.format(Calendar.getInstance().getTime());
+        if (month == null || !month.matches("\\d{4}-(0[1-9]|1[0-2])")) {
+            month = new SimpleDateFormat("yyyy-MM").format(Calendar.getInstance().getTime());
         }
         int year = Integer.parseInt(month.substring(0, 4));
         int mon  = Integer.parseInt(month.substring(5, 7));
+
+        List<CarTransportDto> list = listOfMonth(year, mon, owner);
+        List<CarTransportDto> prev = mon == 1 ? listOfMonth(year - 1, 12, owner) : listOfMonth(year, mon - 1, owner);
+
+        Set<String> drivers = new TreeSet<>(), companies = new TreeSet<>(),
+                    loadings = new TreeSet<>(), unloadings = new TreeSet<>();
+        for (List<CarTransportDto> src : Arrays.asList(list, prev)) {
+            for (CarTransportDto d : src) {
+                addIfPresent(drivers,    d.getDriverName());
+                addIfPresent(companies,  d.getCompany());
+                addIfPresent(loadings,   d.getLoadingPoint());
+                addIfPresent(unloadings, d.getUnloadingPoint());
+            }
+        }
+
+        Map<String, Object> res = new HashMap<>();
+        res.put("month",          month);
+        res.put("list",           list);
+        res.put("driverNames",    drivers);
+        res.put("companies",      companies);
+        res.put("loadingPoints",  loadings);
+        res.put("unloadingPoints", unloadings);
+        res.put("isAdmin",        admin);
+        return res;
+    }
+
+    private List<CarTransportDto> listOfMonth(int year, int mon, String owner) {
         Calendar cal = Calendar.getInstance();
         cal.clear();
         cal.set(year, mon - 1, 1);
         int last = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
-
+        String ym = String.format("%04d-%02d", year, mon);
         Map<String, Object> params = new HashMap<>();
-        params.put("dateFrom", month + "-01");
-        params.put("dateTo",   month + "-" + (last < 10 ? "0" + last : String.valueOf(last)));
-        params.put("ownerId", owner);
+        params.put("dateFrom", ym + "-01");
+        params.put("dateTo",   ym + "-" + String.format("%02d", last));
+        params.put("ownerId",  owner);
+        return carTransportService.getList(params);
+    }
 
-        Map<String, Object> res = new HashMap<>();
-        res.put("month",       month);
-        res.put("list",        carTransportService.getList(params));
-        res.put("driverNames", carTransportService.getDistinctDriverNames(owner));
-        res.put("companies",   carTransportService.getDistinctCompanies(owner));
-        res.put("isAdmin",     admin);
-        return res;
+    private void addIfPresent(Set<String> set, String v) {
+        if (v != null && v.trim().length() > 0) set.add(v.trim());
     }
 
     /** 자동저장: id가 0이면 신규 등록, 아니면 수정. 저장된 id를 반환 */

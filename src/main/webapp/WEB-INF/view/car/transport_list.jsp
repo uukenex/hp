@@ -112,6 +112,15 @@
   tbody tr.blank-row td.td-no, tbody tr.blank-row td[data-col="0"] { background: #fcfdff; }
   #fillRow td { padding: 0; border: none; background: repeating-linear-gradient(to bottom, #fff 0, #fff 34px, #eef0f4 34px, #eef0f4 35px); }
 
+  .prev-panel { display: none; align-items: center; gap: 6px; font-size: 12px; background: #fff; border: 1px solid #b0bec5; border-radius: 20px; padding: 4px 10px; }
+  .prev-panel.open { display: inline-flex; }
+  .prev-panel input, .prev-panel select { border: 1px solid #ccc; border-radius: 5px; padding: 4px 6px; font-size: 13px; }
+  .btn-go { background: #1976d2; color: #fff; border: none; border-radius: 12px; padding: 5px 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
+  #sug { display: none; position: fixed; z-index: 400; background: #fff; border: 1px solid #90a4ae; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.18); max-height: 230px; overflow-y: auto; min-width: 120px; }
+  #sug .it { padding: 7px 10px; font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; gap: 14px; white-space: nowrap; }
+  #sug .it small { color: #888; font-size: 11px; }
+  #sug .it.on, #sug .it:hover { background: #e3f0fb; }
+
   /* 이력 팝업 */
   .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 500; align-items: center; justify-content: center; }
   .modal-bg.show { display: flex; }
@@ -157,11 +166,18 @@
 
 <datalist id="driverNameList"></datalist>
 <datalist id="companyList"></datalist>
+<datalist id="loadingList"></datalist>
+<datalist id="unloadingList"></datalist>
 
 <div class="container">
 
   <div class="toolbar">
     <div id="monthBtns" style="display:flex;gap:6px;"></div>
+    <div id="prevPanel" class="prev-panel">
+      <input type="number" id="prevYear" min="2000" max="2100" style="width:78px;"> 년
+      <select id="prevMonth"></select>
+      <button type="button" class="btn-go" onclick="goPrevMonth()">조회</button>
+    </div>
     <span class="spacer"></span>
     <input type="text" id="fDriver" class="filter-in" placeholder="기사님 조회" list="driverNameList" autocomplete="off">
     <input type="text" id="fCompany" class="filter-in" placeholder="회사 조회" list="companyList" autocomplete="off">
@@ -209,8 +225,8 @@ var COLS = [
   { key:'transportDate',  label:'날짜',          type:'date',  w:'w-date' },
   { key:'driverName',     label:'기사님',        type:'text',  w:'w-driver', list:'driverNameList' },
   { key:'company',        label:'회사',          type:'text',  w:'w-co',     list:'companyList' },
-  { key:'loadingPoint',   label:'상차',          type:'text',  w:'w-point' },
-  { key:'unloadingPoint', label:'하차',          type:'text',  w:'w-point' },
+  { key:'loadingPoint',   label:'상차',          type:'text',  w:'w-point', list:'loadingList' },
+  { key:'unloadingPoint', label:'하차',          type:'text',  w:'w-point', list:'unloadingList' },
   { key:'carModel',       label:'차종',          type:'text',  w:'w-model' },
   { key:'vehicleNo',      label:'차대번호',      type:'text',  w:'w-vin' },
   { key:'supplyPrice',    label:'공급가',        type:'num',   w:'w-price', cls:'supply' },
@@ -253,22 +269,53 @@ function api(url, opts) {
   });
 }
 
-/* ===== 월 버튼 (당월 포함 최근 3개월) ===== */
+/* ===== 월 버튼 (당월 포함 최근 3개월 + 이전) ===== */
 function buildMonthBtns() {
   var box = document.getElementById('monthBtns');
   box.innerHTML = '';
   var now = new Date();
+  var recent = [];
   for (var i = 2; i >= 0; i--) {
     var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     var ym = ymOf(d);
+    recent.push(ym);
     var b = document.createElement('button');
     b.type = 'button';
     b.className = 'month-btn' + (ym === curMonth ? ' active' : '');
     b.textContent = (d.getMonth() + 1) + '월';
     b.dataset.ym = ym;
-    b.addEventListener('click', function(){ switchMonth(this.dataset.ym); });
+    b.addEventListener('click', function(){ closePrevPanel(); switchMonth(this.dataset.ym); });
     box.appendChild(b);
   }
+  // 이전 버튼: 최근 3개월 밖의 달을 보고 있으면 그 달을 표시
+  var custom = recent.indexOf(curMonth) < 0;
+  var pb = document.createElement('button');
+  pb.type = 'button';
+  pb.className = 'month-btn' + (custom ? ' active' : '');
+  pb.textContent = custom ? curMonth.replace('-', '년 ').replace(/ 0?/, ' ') + '월' : '이전 ▾';
+  pb.addEventListener('click', togglePrevPanel);
+  box.appendChild(pb);
+}
+
+function togglePrevPanel() {
+  var p = document.getElementById('prevPanel');
+  if (p.classList.contains('open')) { p.classList.remove('open'); return; }
+  var sel = document.getElementById('prevMonth');
+  if (!sel.options.length) {
+    for (var m = 1; m <= 12; m++) { var o = document.createElement('option'); o.value = pad(m); o.textContent = m + '월'; sel.appendChild(o); }
+  }
+  var base = curMonth || ymOf(new Date());
+  document.getElementById('prevYear').value = base.substring(0, 4);
+  sel.value = base.substring(5, 7);
+  p.classList.add('open');
+}
+function closePrevPanel() { document.getElementById('prevPanel').classList.remove('open'); }
+function goPrevMonth() {
+  var y = parseInt(document.getElementById('prevYear').value, 10);
+  var m = document.getElementById('prevMonth').value;
+  if (!y || y < 2000 || y > 2100) { alert('년도를 확인해 주세요.'); return; }
+  closePrevPanel();
+  switchMonth(y + '-' + m);
 }
 
 function switchMonth(ym) {
@@ -333,6 +380,7 @@ function addRow(data) {
       if (c.list) inp.setAttribute('list', c.list);
       inp.maxLength = c.key === 'remark' ? 1000 : 200;
     }
+    inp.addEventListener('focus', function(){ onFocusCell(row, this); });
     inp.addEventListener('input', function(){ onEdit(row, this); });
     inp.addEventListener('change', function(){ onCommit(row, this); });
     inp.addEventListener('blur', function(){ onCommit(row, this); });
@@ -392,10 +440,13 @@ function onEdit(row, inp) {
   refreshRowState(row);
   ensureBlankRow();
   updateTotals();
+  updateSuggest(row, inp);
   scheduleSave(row, 800);
 }
 
 function onCommit(row, inp) {
+  hideSuggest();
+  rememberValue(inp);
   // 다른 칸으로 이동하는 중일 수 있으므로 포커스 이동이 끝난 뒤 판단
   setTimeout(function() {
     if (autoRemoveIfBlank(row)) return;
@@ -515,6 +566,7 @@ function removeRow(row) {
 
 /* ===== 키보드 이동 ===== */
 function onKey(e, row, inp) {
+  if (sugOpen() && handleSugKey(e)) return;
   var idx = rows.indexOf(row);
   var col = +inp.dataset.i;
   var target = null;
@@ -579,6 +631,8 @@ function loadMonth(ym) {
     buildMonthBtns();
     fillDatalist('driverNameList', res.driverNames);
     fillDatalist('companyList', res.companies);
+    fillDatalist('loadingList', res.loadingPoints);
+    fillDatalist('unloadingList', res.unloadingPoints);
     document.getElementById('gridBody').innerHTML = '';
     rows = [];
     (res.list || []).forEach(function(d){ addRow(d); });
@@ -677,6 +731,134 @@ function openHistory() {
 }
 function closeHistory() { document.getElementById('histModal').classList.remove('show'); }
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeHistory(); });
+
+/* ===== 자동입력 추천 (차종 / 공급가 / 회사공급가) ===== */
+var CAR_MODELS = [
+  '아반떼','쏘나타','그랜저','싼타페','투싼','팰리세이드','코나','캐스퍼','스타리아','포터','베뉴','넥쏘','벨로스터','아이오닉5','아이오닉6',
+  '제네시스 G70','제네시스 G80','제네시스 G90','GV60','GV70','GV80',
+  '모닝','레이','K3','K5','K8','K9','스포티지','쏘렌토','카니발','셀토스','니로','쏘울','모하비','봉고','EV3','EV6','EV9','스팅어','스토닉',
+  'SM6','QM6','XM3','아르카나','그랑 콜레오스',
+  '티볼리','코란도','렉스턴','토레스','액티언',
+  '스파크','트랙스','트레일블레이저','말리부','이쿼녹스','볼트',
+  'BMW 3시리즈','BMW 5시리즈','BMW 7시리즈','BMW X3','BMW X5','벤츠 C클래스','벤츠 E클래스','벤츠 S클래스','벤츠 GLC','벤츠 GLE',
+  '아우디 A4','아우디 A6','아우디 Q5','테슬라 모델3','테슬라 모델Y','테슬라 모델S','볼보 XC60','볼보 XC90',
+  '폭스바겐 티구안','폭스바겐 골프','렉서스 ES','토요타 캠리','미니 쿠퍼','포르쉐 카이엔'
+];
+var CAR_IDX = 5;
+var sug = { el: null, items: [], active: -1, inp: null, row: null };
+
+function sugOpen() { return sug.el && sug.el.style.display === 'block'; }
+function hideSuggest() {
+  if (sug.el) sug.el.style.display = 'none';
+  sug.items = []; sug.active = -1;
+}
+
+function showSuggest(row, inp, items) {
+  if (!items.length) { hideSuggest(); return; }
+  if (!sug.el) {
+    sug.el = document.createElement('div');
+    sug.el.id = 'sug';
+    document.body.appendChild(sug.el);
+  }
+  sug.items = items; sug.active = -1; sug.inp = inp; sug.row = row;
+  sug.el.innerHTML = '';
+  items.forEach(function(it, k) {
+    var d = document.createElement('div');
+    d.className = 'it';
+    var a = document.createElement('span'); a.textContent = it.text;
+    d.appendChild(a);
+    if (it.hint) { var s = document.createElement('small'); s.textContent = it.hint; d.appendChild(s); }
+    d.addEventListener('mousedown', function(e) { e.preventDefault(); pickSuggest(k); }); // blur 방지
+    sug.el.appendChild(d);
+  });
+  var r = inp.getBoundingClientRect();
+  sug.el.style.left = r.left + 'px';
+  sug.el.style.top = r.bottom + 'px';
+  sug.el.style.minWidth = Math.max(120, r.width) + 'px';
+  sug.el.style.display = 'block';
+}
+
+function setSugActive(k) {
+  sug.active = k;
+  Array.prototype.forEach.call(sug.el.children, function(c, i) { c.classList.toggle('on', i === k); });
+  if (k >= 0) sug.el.children[k].scrollIntoView({ block: 'nearest' });
+}
+
+function pickSuggest(k) {
+  var it = sug.items[k], inp = sug.inp, row = sug.row;
+  if (!it) return;
+  inp.value = it.text;
+  onEdit(row, inp);   // 숫자 서식/저장 처리
+  hideSuggest();      // onEdit 이 다시 목록을 띄우지 않게 닫음
+  inp.focus();
+  var len = inp.value.length;
+  try { inp.setSelectionRange(len, len); } catch (e) {}  // 뒤에 이어서 입력 가능
+}
+
+/* 열린 목록의 키보드 조작. 처리했으면 true */
+function handleSugKey(e) {
+  if (e.key === 'ArrowDown') { e.preventDefault(); setSugActive(Math.min(sug.active + 1, sug.items.length - 1)); return true; }
+  if (e.key === 'ArrowUp')   { e.preventDefault(); setSugActive(Math.max(sug.active - 1, -1)); return true; }
+  if (e.key === 'Enter' && sug.active >= 0) { e.preventDefault(); pickSuggest(sug.active); return true; }
+  if (e.key === 'Escape') { hideSuggest(); return true; }
+  return false;
+}
+
+function updateSuggest(row, inp) {
+  var i = +inp.dataset.i;
+  var v = inp.value.trim();
+  if (i === CAR_IDX) {
+    if (!v) { hideSuggest(); return; }               // 빈칸이면 아무것도 안 함
+    var q = v.toLowerCase();
+    var list = CAR_MODELS.filter(function(m) { return m.toLowerCase().indexOf(q) >= 0 && m !== v; });
+    showSuggest(row, inp, list.slice(0, 10).map(function(m) { return { text: m }; }));
+  } else if (i === SUPPLY_IDX || i === COMPANY_IDX) {
+    showSuggest(row, inp, priceCandidates(row, i, inp.value.replace(/[^0-9]/g, '')));
+  } else {
+    hideSuggest();
+  }
+}
+
+/* 같은 달(현재 화면에 로드된 행) 중 같은 상차→하차 / 같은 회사의 금액 */
+function priceCandidates(row, col, typed) {
+  var load = row.inputs[3].value.trim(), unload = row.inputs[4].value.trim(), co = row.inputs[2].value.trim();
+  var map = {};
+  rows.forEach(function(r) {
+    if (r === row) return;
+    var price = toNum(r.inputs[col].value);
+    if (!price) return;
+    var score = 0, why = '';
+    if (load && unload && r.inputs[3].value.trim() === load && r.inputs[4].value.trim() === unload) { score = 2; why = '같은 구간'; }
+    else if (co && r.inputs[2].value.trim() === co) { score = 1; why = '같은 회사'; }
+    if (!score) return;
+    var m = map[price] || (map[price] = { price: price, score: 0, why: '', cnt: 0 });
+    if (score > m.score) { m.score = score; m.why = why; }
+    m.cnt++;
+  });
+  return Object.keys(map).map(function(k) { return map[k]; })
+    .filter(function(m) { return !typed || String(m.price).indexOf(typed) === 0; })
+    .filter(function(m) { return String(m.price) !== typed; })
+    .sort(function(a, b) { return b.score - a.score || b.cnt - a.cnt; })
+    .slice(0, 8)
+    .map(function(m) { return { text: m.price.toLocaleString('ko-KR'), hint: m.why + ' ' + m.cnt + '건' }; });
+}
+
+function onFocusCell(row, inp) {
+  var i = +inp.dataset.i;
+  if ((i === SUPPLY_IDX || i === COMPANY_IDX) && !inp.value.trim()) updateSuggest(row, inp);
+}
+
+/* 입력한 새 값을 자동완성 목록에도 즉시 반영 */
+function rememberValue(inp) {
+  var c = COLS[+inp.dataset.i], v = inp.value.trim();
+  if (!c.list || !v) return;
+  var dl = document.getElementById(c.list);
+  var exists = Array.prototype.some.call(dl.options, function(o) { return o.value === v; });
+  if (!exists) { var o = document.createElement('option'); o.value = v; dl.appendChild(o); }
+}
+
+window.addEventListener('resize', hideSuggest);
+document.querySelector('.grid-wrap').addEventListener('scroll', hideSuggest);
 
 /* ===== 초기화 ===== */
 (function() {
