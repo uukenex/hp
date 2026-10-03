@@ -5,7 +5,7 @@
 <mapper namespace="my.prac.core.car.dao.TuserKakaoDAO">
 
     <select id="findByKakaoId" parameterType="String" resultType="my.prac.core.car.dto.TuserKakaoDto">
-        SELECT USER_SEQ, KAKAO_ID, NICKNAME, PROFILE_IMAGE, AUTO_LOGIN_TOKEN,
+        SELECT USER_SEQ, KAKAO_ID, NICKNAME, PROFILE_IMAGE, AUTO_LOGIN_TOKEN, IS_ADMIN,
                TO_CHAR(TOKEN_EXPIRE,  'YYYY-MM-DD HH24:MI:SS') AS TOKEN_EXPIRE,
                TO_CHAR(LAST_LOGIN,    'YYYY-MM-DD HH24:MI:SS') AS LAST_LOGIN,
                TO_CHAR(INSERT_DATE,   'YYYY-MM-DD HH24:MI:SS') AS INSERT_DATE

@@ -10,6 +10,9 @@ import java.util.List;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +25,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import my.prac.core.car.dto.CarTransportDto;
 import my.prac.core.car.dto.CarTransportHistoryDto;
 import my.prac.core.car.dto.CarUserDto;
+import my.prac.core.car.dto.TuserKakaoDto;
+import my.prac.core.car.service.TuserKakaoService;
 import my.prac.core.car.service.CarTransportService;
 
 @Controller
@@ -30,6 +35,9 @@ public class CarTransportController {
 
     @Resource(name = "core.car.CarTransportService")
     private CarTransportService carTransportService;
+
+    @Autowired
+    private TuserKakaoService tuserKakaoService;
 
     /** 메인 페이지 (SPA 셸) - 데이터는 /transport/api/* 로 로드 */
     @GetMapping("/list")
@@ -40,7 +48,9 @@ public class CarTransportController {
     /** 월별 조회. month=YYYY-MM (없으면 당월) */
     @GetMapping("/api/list")
     @ResponseBody
-    public Map<String, Object> apiList(@RequestParam(required = false) String month) {
+    public Map<String, Object> apiList(@RequestParam(required = false) String month, HttpSession session) {
+        boolean admin = isAdmin(session);
+        String owner = admin ? null : kakaoId(session);
         SimpleDateFormat ym = new SimpleDateFormat("yyyy-MM");
         if (month == null || !month.matches("\\d{4}-\\d{2}")) {
             month = ym.format(Calendar.getInstance().getTime());
@@ -55,55 +65,85 @@ public class CarTransportController {
         Map<String, Object> params = new HashMap<>();
         params.put("dateFrom", month + "-01");
         params.put("dateTo",   month + "-" + (last < 10 ? "0" + last : String.valueOf(last)));
+        params.put("ownerId", owner);
 
         Map<String, Object> res = new HashMap<>();
         res.put("month",       month);
         res.put("list",        carTransportService.getList(params));
-        res.put("driverNames", carTransportService.getDistinctDriverNames());
-        res.put("companies",   carTransportService.getDistinctCompanies());
+        res.put("driverNames", carTransportService.getDistinctDriverNames(owner));
+        res.put("companies",   carTransportService.getDistinctCompanies(owner));
+        res.put("isAdmin",     admin);
         return res;
     }
 
     /** 자동저장: id가 0이면 신규 등록, 아니면 수정. 저장된 id를 반환 */
     @PostMapping("/api/save")
     @ResponseBody
-    public Map<String, Object> apiSave(@RequestBody CarTransportDto dto, HttpSession session) {
+    public ResponseEntity<Map<String, Object>> apiSave(@RequestBody CarTransportDto dto, HttpSession session) {
         String by = currentUser(session);
+        String me = kakaoId(session);
         if (dto.getId() > 0) {
             CarTransportDto before = carTransportService.getDetail(dto.getId());
+            if (before == null || !canAccess(session, before)) {
+                return new ResponseEntity<Map<String, Object>>(HttpStatus.FORBIDDEN);
+            }
             carTransportService.update(dto);
             String diff = diff(before, dto);
             if (diff.length() > 0) {
                 writeHistory(dto.getId(), "UPDATE", dto, diff, by);
             }
         } else {
+            dto.setCreatedBy(me); // 클라이언트 값은 무시하고 로그인 사용자로 고정
             carTransportService.insert(dto);
             writeHistory(dto.getId(), "INSERT", dto, describe(dto), by);
         }
         Map<String, Object> res = new HashMap<>();
         res.put("id", dto.getId());
-        return res;
+        return new ResponseEntity<Map<String, Object>>(res, HttpStatus.OK);
     }
 
     /** 소프트 삭제 (삭제 직전 값을 이력에 남김) */
     @PostMapping("/api/delete/{id}")
     @ResponseBody
-    public Map<String, Object> apiDelete(@PathVariable int id, HttpSession session) {
+    public ResponseEntity<Map<String, Object>> apiDelete(@PathVariable int id, HttpSession session) {
         CarTransportDto before = carTransportService.getDetail(id);
-        carTransportService.softDelete(id);
-        if (before != null) {
-            writeHistory(id, "DELETE", before, describe(before), currentUser(session));
+        if (before == null || !canAccess(session, before)) {
+            return new ResponseEntity<Map<String, Object>>(HttpStatus.FORBIDDEN);
         }
+        carTransportService.softDelete(id);
+        writeHistory(id, "DELETE", before, describe(before), currentUser(session));
         Map<String, Object> res = new HashMap<>();
         res.put("ok", true);
-        return res;
+        return new ResponseEntity<Map<String, Object>>(res, HttpStatus.OK);
+    }
+
+    // ===== 권한 헬퍼 =====
+
+    private String kakaoId(HttpSession session) {
+        Object u = session.getAttribute("carUser");
+        return (u instanceof CarUserDto) ? ((CarUserDto) u).getKakaoId() : null;
+    }
+
+    /** 관리자 여부는 세션이 아니라 DB(IS_ADMIN='Y')에서 매번 확인 → 변경 즉시 반영 */
+    private boolean isAdmin(HttpSession session) {
+        String id = kakaoId(session);
+        if (id == null) return false;
+        TuserKakaoDto user = tuserKakaoService.findByKakaoId(id);
+        return user != null && "Y".equals(user.getIsAdmin());
+    }
+
+    /** 관리자는 전체, 일반 사용자는 본인이 작성한 행만 */
+    private boolean canAccess(HttpSession session, CarTransportDto row) {
+        if (isAdmin(session)) return true;
+        String me = kakaoId(session);
+        return me != null && me.equals(row.getCreatedBy());
     }
 
     /** 변경 이력 (최근 300건) */
     @GetMapping("/api/history")
     @ResponseBody
-    public List<CarTransportHistoryDto> apiHistory() {
-        return carTransportService.getHistory(300);
+    public List<CarTransportHistoryDto> apiHistory(HttpSession session) {
+        return carTransportService.getHistory(300, isAdmin(session) ? null : kakaoId(session));
     }
 
     // ===== 이력 헬퍼 =====

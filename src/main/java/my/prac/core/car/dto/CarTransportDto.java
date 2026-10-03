@@ -21,6 +21,7 @@ public class CarTransportDto implements Serializable {
     private String invoiceIssued;
     private String statementDoc;
     private String remark;
+    private String createdBy; // 작성자 KAKAO_ID
     private int    isHidden;
     private String createdAt;
 
@@ -38,6 +39,9 @@ public class CarTransportDto implements Serializable {
 
     public String getStatementDoc() { return statementDoc; }
     public void setStatementDoc(String statementDoc) { this.statementDoc = statementDoc; }
+
+    public String getCreatedBy() { return createdBy; }
+    public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
 
     public String getRemark() { return remark; }
     public void setRemark(String remark) { this.remark = remark; }

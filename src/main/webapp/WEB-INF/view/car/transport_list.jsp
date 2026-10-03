@@ -148,7 +148,7 @@
 <body>
 
 <div class="top-bar">
-  <h1>🚚 차량 운송 관리</h1>
+  <h1>🚚 차량 운송 관리 <span id="roleBadge" style="font-size:11px;font-weight:700;color:#fff;background:#6a1b9a;border-radius:10px;padding:2px 8px;margin-left:6px;display:none;">관리자</span></h1>
   <div class="nav-links">
     <a href="${pageContext.request.contextPath}/">홈</a>
     <a href="${pageContext.request.contextPath}/car/logout">로그아웃</a>
@@ -575,6 +575,7 @@ function loadMonth(ym) {
   setStatus('saving', '불러오는 중…');
   return api('/transport/api/list?month=' + encodeURIComponent(ym)).then(function(res) {
     curMonth = res.month;
+    document.getElementById('roleBadge').style.display = res.isAdmin ? 'inline' : 'none';
     buildMonthBtns();
     fillDatalist('driverNameList', res.driverNames);
     fillDatalist('companyList', res.companies);

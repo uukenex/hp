@@ -24,11 +24,15 @@
             INVOICE_ISSUED,
             STATEMENT_DOC,
             REMARK,
+            CREATED_BY,
             IS_HIDDEN,
             TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT
         FROM TCAR_TRANSPORT
         <where>
             AND IS_HIDDEN = 0
+            <if test="ownerId != null">
+                AND CREATED_BY = #{ownerId}
+            </if>
             <if test="dateFrom != null and dateFrom != ''">
                 AND TRANSPORT_DATE &gt;= TO_DATE(#{dateFrom}, 'YYYY-MM-DD')
             </if>
@@ -63,6 +67,7 @@
             INVOICE_ISSUED,
             STATEMENT_DOC,
             REMARK,
+            CREATED_BY,
             IS_HIDDEN,
             TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI') AS CREATED_AT
         FROM TCAR_TRANSPORT
@@ -74,6 +79,7 @@
         SELECT DISTINCT TRIM(DRIVER_NAME) AS DRIVER_NAME
         FROM TCAR_TRANSPORT
         WHERE IS_HIDDEN = 0 AND TRIM(DRIVER_NAME) IS NOT NULL
+        <if test="ownerId != null"> AND CREATED_BY = #{ownerId}</if>
         ORDER BY 1
     </select>
 
@@ -82,6 +88,7 @@
         SELECT DISTINCT TRIM(COMPANY) AS COMPANY
         FROM TCAR_TRANSPORT
         WHERE IS_HIDDEN = 0 AND TRIM(COMPANY) IS NOT NULL
+        <if test="ownerId != null"> AND CREATED_BY = #{ownerId}</if>
         ORDER BY 1
     </select>
 
@@ -94,6 +101,7 @@
             LOADING_POINT, UNLOADING_POINT, CAR_MODEL, VEHICLE_NO,
             SUPPLY_PRICE, COMPANY_PRICE,
             LOADING_PHONE, PHOTO_PAYMENT, DEPOSIT, INVOICE_ISSUED, STATEMENT_DOC, REMARK,
+            CREATED_BY,
             IS_HIDDEN, CREATED_AT
         ) VALUES (
             #{id},
@@ -104,6 +112,7 @@
             #{loadingPhone, jdbcType=VARCHAR}, #{photoPayment, jdbcType=VARCHAR},
             #{deposit, jdbcType=VARCHAR}, #{invoiceIssued, jdbcType=VARCHAR},
             #{statementDoc, jdbcType=VARCHAR}, #{remark, jdbcType=VARCHAR},
+            #{createdBy, jdbcType=VARCHAR},
             0, SYSDATE
         )
     </insert>
@@ -145,11 +154,14 @@
         )
     </insert>
 
-    <select id="getHistory" parameterType="int" resultType="my.prac.core.car.dto.CarTransportHistoryDto">
+    <select id="getHistory" resultType="my.prac.core.car.dto.CarTransportHistoryDto">
         SELECT * FROM (
             SELECT HIST_ID, TRANSPORT_ID, ACTION, ROW_LABEL, DETAIL, CHANGED_BY,
                    TO_CHAR(CHANGED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CHANGED_AT
             FROM TCAR_TRANSPORT_HIST
+            <if test="ownerId != null">
+                WHERE TRANSPORT_ID IN (SELECT ID FROM TCAR_TRANSPORT WHERE CREATED_BY = #{ownerId})
+            </if>
             ORDER BY HIST_ID DESC
         ) WHERE ROWNUM &lt;= #{limit}
     </select>

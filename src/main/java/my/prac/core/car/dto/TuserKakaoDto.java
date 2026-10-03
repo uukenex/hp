@@ -13,6 +13,10 @@ public class TuserKakaoDto implements Serializable {
     private String tokenExpire;
     private String lastLogin;
     private String insertDate;
+    private String isAdmin; // Y / N
+
+    public String getIsAdmin() { return isAdmin; }
+    public void setIsAdmin(String isAdmin) { this.isAdmin = isAdmin; }
 
     public int getUserSeq() { return userSeq; }
     public void setUserSeq(int userSeq) { this.userSeq = userSeq; }

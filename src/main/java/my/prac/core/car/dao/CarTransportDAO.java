@@ -3,6 +3,7 @@ package my.prac.core.car.dao;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 import my.prac.core.car.dto.CarTransportDto;
@@ -13,15 +14,15 @@ import my.prac.core.car.dto.CarTransportHistoryDto;
 public interface CarTransportDAO {
     List<CarTransportDto>     getList(Map<String, Object> params);
     CarTransportDto           getDetail(int id);
-    List<String>              getDistinctDriverNames();
-    List<String>              getDistinctCompanies();
+    List<String>              getDistinctDriverNames(@Param("ownerId") String ownerId);
+    List<String>              getDistinctCompanies(@Param("ownerId") String ownerId);
     int                       insert(CarTransportDto dto);
     int                       update(CarTransportDto dto);
     int                       softDelete(int id);
 
     // 변경 이력
     int                       insertHistory(CarTransportHistoryDto dto);
-    List<CarTransportHistoryDto> getHistory(int limit);
+    List<CarTransportHistoryDto> getHistory(@Param("limit") int limit, @Param("ownerId") String ownerId);
 
     // 장표(파일첨부) 관련
     List<CarTransportFileDto> getFileList(int transportId);

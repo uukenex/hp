@@ -10,8 +10,8 @@ import my.prac.core.car.dto.CarTransportHistoryDto;
 public interface CarTransportService {
     List<CarTransportDto>     getList(Map<String, Object> params);
     CarTransportDto           getDetail(int id);
-    List<String>              getDistinctDriverNames();
-    List<String>              getDistinctCompanies();
+    List<String>              getDistinctDriverNames(String ownerId);
+    List<String>              getDistinctCompanies(String ownerId);
     void                      insert(CarTransportDto dto);
     void                      insertBatch(List<CarTransportDto> list);
     void                      update(CarTransportDto dto);
@@ -19,7 +19,7 @@ public interface CarTransportService {
 
     // 변경 이력
     void                      insertHistory(CarTransportHistoryDto dto);
-    List<CarTransportHistoryDto> getHistory(int limit);
+    List<CarTransportHistoryDto> getHistory(int limit, String ownerId);
 
     // 장표(파일첨부) 관련
     List<CarTransportFileDto> getFileList(int transportId);

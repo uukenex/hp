@@ -31,6 +31,11 @@ public class TuserKakaoServiceImpl implements TuserKakaoService {
     }
 
     @Override
+    public TuserKakaoDto findByKakaoId(String kakaoId) {
+        return tuserKakaoDAO.findByKakaoId(kakaoId);
+    }
+
+    @Override
     public TuserKakaoDto findByToken(String token) {
         return tuserKakaoDAO.findByToken(token);
     }

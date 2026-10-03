@@ -21,14 +21,14 @@ public class CarTransportServiceImpl implements CarTransportService {
 
     @Override public List<CarTransportDto> getList(Map<String, Object> params) { return carTransportDAO.getList(params); }
     @Override public CarTransportDto getDetail(int id) { return carTransportDAO.getDetail(id); }
-    @Override public List<String> getDistinctDriverNames() { return carTransportDAO.getDistinctDriverNames(); }
-    @Override public List<String> getDistinctCompanies()   { return carTransportDAO.getDistinctCompanies(); }
+    @Override public List<String> getDistinctDriverNames(String ownerId) { return carTransportDAO.getDistinctDriverNames(ownerId); }
+    @Override public List<String> getDistinctCompanies(String ownerId) { return carTransportDAO.getDistinctCompanies(ownerId); }
     @Override public void insert(CarTransportDto dto)      { carTransportDAO.insert(dto); }
     @Override public void insertBatch(List<CarTransportDto> list) { for (CarTransportDto dto : list) carTransportDAO.insert(dto); }
     @Override public void update(CarTransportDto dto)      { carTransportDAO.update(dto); }
     @Override public void softDelete(int id)               { carTransportDAO.softDelete(id); }
     @Override public void insertHistory(CarTransportHistoryDto dto) { carTransportDAO.insertHistory(dto); }
-    @Override public List<CarTransportHistoryDto> getHistory(int limit) { return carTransportDAO.getHistory(limit); }
+    @Override public List<CarTransportHistoryDto> getHistory(int limit, String ownerId) { return carTransportDAO.getHistory(limit, ownerId); }
 
     @Override public List<CarTransportFileDto> getFileList(int transportId) { return carTransportDAO.getFileList(transportId); }
     @Override public CarTransportFileDto getFileDetail(int fileId)          { return carTransportDAO.getFileDetail(fileId); }
