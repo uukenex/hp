@@ -275,10 +275,18 @@ function buildMonthBtns() {
   box.innerHTML = '';
   var now = new Date();
   var recent = [];
+  for (var k = 2; k >= 0; k--) recent.push(ymOf(new Date(now.getFullYear(), now.getMonth() - k, 1)));
+  var custom = recent.indexOf(curMonth) < 0;
+  var pb = document.createElement('button');
+  pb.type = 'button';
+  pb.className = 'month-btn' + (custom ? ' active' : '');
+  pb.textContent = custom ? curMonth.replace('-', '년 ').replace(/ 0?/, ' ') + '월' : '이전 ▾';
+  pb.addEventListener('click', togglePrevPanel);
+  box.appendChild(pb);
   for (var i = 2; i >= 0; i--) {
     var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     var ym = ymOf(d);
-    recent.push(ym);
+
     var b = document.createElement('button');
     b.type = 'button';
     b.className = 'month-btn' + (ym === curMonth ? ' active' : '');
@@ -288,13 +296,6 @@ function buildMonthBtns() {
     box.appendChild(b);
   }
   // 이전 버튼: 최근 3개월 밖의 달을 보고 있으면 그 달을 표시
-  var custom = recent.indexOf(curMonth) < 0;
-  var pb = document.createElement('button');
-  pb.type = 'button';
-  pb.className = 'month-btn' + (custom ? ' active' : '');
-  pb.textContent = custom ? curMonth.replace('-', '년 ').replace(/ 0?/, ' ') + '월' : '이전 ▾';
-  pb.addEventListener('click', togglePrevPanel);
-  box.appendChild(pb);
 }
 
 function togglePrevPanel() {
@@ -808,15 +809,31 @@ function updateSuggest(row, inp) {
   var i = +inp.dataset.i;
   var v = inp.value.trim();
   if (i === CAR_IDX) {
-    if (!v) { hideSuggest(); return; }               // 빈칸이면 아무것도 안 함
-    var q = v.toLowerCase();
-    var list = CAR_MODELS.filter(function(m) { return m.toLowerCase().indexOf(q) >= 0 && m !== v; });
-    showSuggest(row, inp, list.slice(0, 10).map(function(m) { return { text: m }; }));
+    showSuggest(row, inp, carCandidates(v));
   } else if (i === SUPPLY_IDX || i === COMPANY_IDX) {
     showSuggest(row, inp, priceCandidates(row, i, inp.value.replace(/[^0-9]/g, '')));
   } else {
     hideSuggest();
   }
+}
+
+/* 자주 쓰는 국산차 (빈칸일 때 위쪽에 표시) */
+var POPULAR_CARS = ['아반떼','쏘나타','그랜저','싼타페','투싼','팰리세이드','카니발','쏘렌토','스포티지','K5','K8','모닝','레이','캐스퍼','포터','봉고','스타리아','코나','제네시스 G80','GV80'];
+
+function carCandidates(v) {
+  var q = (v || '').toLowerCase();
+  var seen = {}, out = [];
+  // 이번 달에 이미 입력된 차종도 후보에 포함
+  var used = [];
+  rows.forEach(function(r) { var x = r.inputs[CAR_IDX].value.trim(); if (x && used.indexOf(x) < 0) used.push(x); });
+  var all = POPULAR_CARS.concat(CAR_MODELS, used);   // 자주 쓰는 차가 항상 위쪽
+  all.forEach(function(m) {
+    if (seen[m] || m === v) return;
+    if (q && m.toLowerCase().indexOf(q) < 0) return;
+    seen[m] = true;
+    out.push({ text: m, hint: !q && POPULAR_CARS.indexOf(m) >= 0 ? '자주 쓰는 차' : '' });
+  });
+  return out.slice(0, 12);
 }
 
 /* 같은 달(현재 화면에 로드된 행) 중 같은 상차→하차 / 같은 회사의 금액 */
@@ -830,7 +847,7 @@ function priceCandidates(row, col, typed) {
     var score = 0, why = '';
     if (load && unload && r.inputs[3].value.trim() === load && r.inputs[4].value.trim() === unload) { score = 2; why = '같은 구간'; }
     else if (co && r.inputs[2].value.trim() === co) { score = 1; why = '같은 회사'; }
-    if (!score) return;
+    if (!score) why = '이번 달';   // 같은 구간/회사가 아니어도 후보에 포함 (낮은 우선순위)
     var m = map[price] || (map[price] = { price: price, score: 0, why: '', cnt: 0 });
     if (score > m.score) { m.score = score; m.why = why; }
     m.cnt++;
@@ -839,13 +856,13 @@ function priceCandidates(row, col, typed) {
     .filter(function(m) { return !typed || String(m.price).indexOf(typed) === 0; })
     .filter(function(m) { return String(m.price) !== typed; })
     .sort(function(a, b) { return b.score - a.score || b.cnt - a.cnt; })
-    .slice(0, 8)
+    .slice(0, 10)
     .map(function(m) { return { text: m.price.toLocaleString('ko-KR'), hint: m.why + ' ' + m.cnt + '건' }; });
 }
 
 function onFocusCell(row, inp) {
   var i = +inp.dataset.i;
-  if ((i === SUPPLY_IDX || i === COMPANY_IDX) && !inp.value.trim()) updateSuggest(row, inp);
+  if ((i === SUPPLY_IDX || i === COMPANY_IDX || i === CAR_IDX) && !inp.value.trim()) updateSuggest(row, inp);
 }
 
 /* 입력한 새 값을 자동완성 목록에도 즉시 반영 */
@@ -857,8 +874,16 @@ function rememberValue(inp) {
   if (!exists) { var o = document.createElement('option'); o.value = v; dl.appendChild(o); }
 }
 
-window.addEventListener('resize', hideSuggest);
-document.querySelector('.grid-wrap').addEventListener('scroll', hideSuggest);
+function repositionSuggest() {
+  if (!sugOpen() || !sug.inp) return;
+  var r = sug.inp.getBoundingClientRect();
+  var wr = document.querySelector('.grid-wrap').getBoundingClientRect();
+  if (r.bottom < wr.top || r.top > wr.bottom) { hideSuggest(); return; }   // 입력칸이 화면 밖으로 나간 경우만 닫음
+  sug.el.style.left = r.left + 'px';
+  sug.el.style.top = r.bottom + 'px';
+}
+window.addEventListener('resize', repositionSuggest);
+document.querySelector('.grid-wrap').addEventListener('scroll', repositionSuggest);
 
 /* ===== 초기화 ===== */
 (function() {
