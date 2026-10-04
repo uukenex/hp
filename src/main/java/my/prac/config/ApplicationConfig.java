@@ -22,14 +22,16 @@ import org.springframework.jdbc.datasource.lookup.DataSourceLookupFailureExcepti
 import org.springframework.jdbc.datasource.lookup.JndiDataSourceLookup;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
-@MapperScan("my.prac.core.car.dao")
+@MapperScan({ "my.prac.core.car.dao", "my.prac.core.calendar.dao" })
 @PropertySource("classpath:/safety/keys.properties")
-@ComponentScan(basePackages = { "my.prac.api", "my.prac.core.car" },
+@ComponentScan(basePackages = { "my.prac.api", "my.prac.core.car", "my.prac.core.calendar" },
     excludeFilters = @Filter(type = FilterType.ANNOTATION, classes = Controller.class))
 @Import({ TransactionConfig.class })
 @EnableTransactionManagement
+@EnableScheduling
 public class ApplicationConfig {
 	static Logger logger = LoggerFactory.getLogger(ApplicationConfig.class);
 

@@ -74,6 +74,11 @@
       <div class="label">차량 운송관리</div>
       <div class="desc">운송 정보 관리</div>
     </a>
+    <a href="<%=request.getContextPath()%>/calendar/main" class="card">
+      <span class="icon">&#x1F4C5;</span>
+      <div class="label">캘린더 D-day</div>
+      <div class="desc">기념일 / 생일 알림</div>
+    </a>
     <!--
     <a href="<%=request.getContextPath()%>/bom/invite" class="card">
       <span class="icon">&#x1F490;</span>

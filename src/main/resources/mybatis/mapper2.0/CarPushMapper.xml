@@ -11,6 +11,7 @@
         <result column="P256DH"     property="p256dh"/>
         <result column="AUTH"       property="auth"/>
         <result column="USER_AGENT" property="userAgent"/>
+        <result column="APP"        property="app"/>
     </resultMap>
 
     <!-- 같은 endpoint 면 사용자/키 갱신, 없으면 등록 -->
@@ -22,9 +23,10 @@
             T.KAKAO_ID   = #{kakaoId},
             T.P256DH     = #{p256dh},
             T.AUTH       = #{auth},
-            T.USER_AGENT = #{userAgent, jdbcType=VARCHAR}
-        WHEN NOT MATCHED THEN INSERT (SUB_ID, KAKAO_ID, ENDPOINT, P256DH, AUTH, USER_AGENT, CREATED_AT)
-            VALUES (TCAR_PUSH_SUB_SEQ.NEXTVAL, #{kakaoId}, #{endpoint}, #{p256dh}, #{auth}, #{userAgent, jdbcType=VARCHAR}, SYSDATE)
+            T.USER_AGENT = #{userAgent, jdbcType=VARCHAR},
+            T.APP        = #{app}
+        WHEN NOT MATCHED THEN INSERT (SUB_ID, KAKAO_ID, ENDPOINT, P256DH, AUTH, USER_AGENT, APP, CREATED_AT)
+            VALUES (TCAR_PUSH_SUB_SEQ.NEXTVAL, #{kakaoId}, #{endpoint}, #{p256dh}, #{auth}, #{userAgent, jdbcType=VARCHAR}, #{app}, SYSDATE)
     </update>
 
     <delete id="deleteByEndpoint">
@@ -32,16 +34,16 @@
     </delete>
 
     <select id="getSubsByKakaoId" resultMap="subMap">
-        SELECT SUB_ID, KAKAO_ID, ENDPOINT, P256DH, AUTH, USER_AGENT
+        SELECT SUB_ID, KAKAO_ID, ENDPOINT, P256DH, AUTH, USER_AGENT, APP
         FROM TCAR_PUSH_SUB
-        WHERE KAKAO_ID = #{kakaoId}
+        WHERE KAKAO_ID = #{kakaoId} AND APP = #{app}
     </select>
 
     <select id="getNotifySubs" resultMap="subMap">
-        SELECT S.SUB_ID, S.KAKAO_ID, S.ENDPOINT, S.P256DH, S.AUTH, S.USER_AGENT
+        SELECT S.SUB_ID, S.KAKAO_ID, S.ENDPOINT, S.P256DH, S.AUTH, S.USER_AGENT, S.APP
         FROM TCAR_PUSH_SUB S
         JOIN TCAR_USER_KAKAO U ON U.KAKAO_ID = S.KAKAO_ID
-        WHERE U.NOTIFY_LOGIN = 'Y'
+        WHERE U.NOTIFY_LOGIN = 'Y' AND S.APP = 'TRANSPORT'
         <if test="exceptKakaoId != null">
             AND S.KAKAO_ID != #{exceptKakaoId}
         </if>

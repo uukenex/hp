@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.prac.core.calendar.dao.CalendarDAO">
+
+    <sql id="itemCols">
+        ITEM_ID, OWNER_KAKAO_ID, ITEM_TYPE, TITLE,
+        TO_CHAR(BASE_DATE, 'YYYY-MM-DD') AS BASE_DATE,
+        HAS_YEAR, COUNT_FROM_ONE, INTERVAL_DAYS, YEARLY, NOTIFY_DAYS, MEMO
+    </sql>
+
+    <select id="getItemsByOwner" resultType="my.prac.core.calendar.dto.CalItemDto">
+        SELECT <include refid="itemCols"/>
+        FROM TCAL_ITEM
+        WHERE OWNER_KAKAO_ID = #{ownerId} AND IS_HIDDEN = 0
+        ORDER BY ITEM_ID
+    </select>
+
+    <select id="getAllItems" resultType="my.prac.core.calendar.dto.CalItemDto">
+        SELECT <include refid="itemCols"/>
+        FROM TCAL_ITEM
+        WHERE IS_HIDDEN = 0
+        ORDER BY ITEM_ID
+    </select>
+
+    <select id="getItem" resultType="my.prac.core.calendar.dto.CalItemDto">
+        SELECT <include refid="itemCols"/>
+        FROM TCAL_ITEM
+        WHERE ITEM_ID = #{itemId} AND IS_HIDDEN = 0
+    </select>
+
+    <insert id="insertItem" parameterType="my.prac.core.calendar.dto.CalItemDto">
+        <selectKey keyProperty="itemId" resultType="int" order="BEFORE">
+            SELECT TCAL_ITEM_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO TCAL_ITEM (
+            ITEM_ID, OWNER_KAKAO_ID, ITEM_TYPE, TITLE, BASE_DATE, HAS_YEAR,
+            COUNT_FROM_ONE, INTERVAL_DAYS, YEARLY, NOTIFY_DAYS, MEMO, IS_HIDDEN, CREATED_AT
+        ) VALUES (
+            #{itemId}, #{ownerKakaoId}, #{itemType}, #{title}, TO_DATE(#{baseDate}, 'YYYY-MM-DD'), #{hasYear},
+            #{countFromOne}, #{intervalDays}, #{yearly}, #{notifyDays, jdbcType=VARCHAR}, #{memo, jdbcType=VARCHAR}, 0, SYSDATE
+        )
+    </insert>
+
+    <update id="updateItem" parameterType="my.prac.core.calendar.dto.CalItemDto">
+        UPDATE TCAL_ITEM SET
+            ITEM_TYPE      = #{itemType},
+            TITLE          = #{title},
+            BASE_DATE      = TO_DATE(#{baseDate}, 'YYYY-MM-DD'),
+            HAS_YEAR       = #{hasYear},
+            COUNT_FROM_ONE = #{countFromOne},
+            INTERVAL_DAYS  = #{intervalDays},
+            YEARLY         = #{yearly},
+            NOTIFY_DAYS    = #{notifyDays, jdbcType=VARCHAR},
+            MEMO           = #{memo, jdbcType=VARCHAR}
+        WHERE ITEM_ID = #{itemId} AND OWNER_KAKAO_ID = #{ownerKakaoId} AND IS_HIDDEN = 0
+    </update>
+
+    <update id="hideItem">
+        UPDATE TCAL_ITEM SET IS_HIDDEN = 1
+        WHERE ITEM_ID = #{itemId} AND OWNER_KAKAO_ID = #{ownerId}
+    </update>
+
+    <update id="insertNotifyLog">
+        MERGE INTO TCAL_NOTIFY_LOG T
+        USING (SELECT #{itemId} AS ITEM_ID, TO_DATE(#{occurDate}, 'YYYY-MM-DD') AS OCCUR_DATE, #{daysBefore} AS DAYS_BEFORE FROM DUAL) S
+        ON (T.ITEM_ID = S.ITEM_ID AND T.OCCUR_DATE = S.OCCUR_DATE AND T.DAYS_BEFORE = S.DAYS_BEFORE)
+        WHEN NOT MATCHED THEN INSERT (ITEM_ID, OCCUR_DATE, DAYS_BEFORE, SENT_AT)
+            VALUES (S.ITEM_ID, S.OCCUR_DATE, S.DAYS_BEFORE, SYSDATE)
+    </update>
+
+    <delete id="deleteNotifyLog">
+        DELETE FROM TCAL_NOTIFY_LOG
+        WHERE ITEM_ID = #{itemId} AND OCCUR_DATE = TO_DATE(#{occurDate}, 'YYYY-MM-DD') AND DAYS_BEFORE = #{daysBefore}
+    </delete>
+
+</mapper>

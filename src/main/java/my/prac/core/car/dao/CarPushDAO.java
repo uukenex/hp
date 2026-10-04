@@ -15,7 +15,7 @@ public interface CarPushDAO {
 
     int deleteByEndpoint(@Param("endpoint") String endpoint);
 
-    List<PushSubDto> getSubsByKakaoId(@Param("kakaoId") String kakaoId);
+    List<PushSubDto> getSubsByKakaoId(@Param("kakaoId") String kakaoId, @Param("app") String app);
 
     /** 알림 수신자(NOTIFY_LOGIN=Y)의 구독 목록. exceptKakaoId 본인은 제외 */
     List<PushSubDto> getNotifySubs(@Param("exceptKakaoId") String exceptKakaoId);

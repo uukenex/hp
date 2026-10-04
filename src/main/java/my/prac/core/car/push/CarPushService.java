@@ -91,12 +91,17 @@ public class CarPushService {
     // ===== 구독 =====
 
     public void subscribe(String kakaoId, String endpoint, String p256dh, String auth, String userAgent) {
+        subscribe(kakaoId, endpoint, p256dh, auth, userAgent, "TRANSPORT");
+    }
+
+    public void subscribe(String kakaoId, String endpoint, String p256dh, String auth, String userAgent, String app) {
         PushSubDto d = new PushSubDto();
         d.setKakaoId(kakaoId);
         d.setEndpoint(endpoint);
         d.setP256dh(p256dh);
         d.setAuth(auth);
         d.setUserAgent(userAgent != null && userAgent.length() > 300 ? userAgent.substring(0, 300) : userAgent);
+        d.setApp(app);
         dao.mergeSub(d);
     }
 
@@ -105,15 +110,15 @@ public class CarPushService {
     }
 
     public int countSubs(String kakaoId) {
-        return dao.getSubsByKakaoId(kakaoId).size();
+        return dao.getSubsByKakaoId(kakaoId, "TRANSPORT").size();
     }
 
     // ===== 발송 =====
 
     /** 해당 사용자의 모든 기기로 발송(비동기). 대상 기기 수 반환 */
     public int sendToUser(String kakaoId, String title, String body, String url) {
-        List<PushSubDto> subs = dao.getSubsByKakaoId(kakaoId);
-        sendAsync(subs, "TEST", kakaoId, null, title, body, url);
+        List<PushSubDto> subs = dao.getSubsByKakaoId(kakaoId, "TRANSPORT");
+        sendAsync(subs, "TEST", kakaoId, null, title, body, url, null, null);
         return subs.size();
     }
 
@@ -145,7 +150,7 @@ public class CarPushService {
                         lastWorkNotify.remove(actorId);   // 받을 기기가 없으면 선점 해제
                         return;
                     }
-                    sendAsync(subs, "WORK", actorId, name, "🚚 운송관리", name + "님이 작업을 시작했습니다", "list");
+                    sendAsync(subs, "WORK", actorId, name, "🚚 운송관리", name + "님이 작업을 시작했습니다", "list", null, null);
                 } catch (Exception e) {
                     lastWorkNotify.remove(actorId);
                     logger.warn("작업 알림 실패", e);   // 알림 실패가 저장에 영향을 주지 않도록
@@ -154,10 +159,22 @@ public class CarPushService {
         });
     }
 
+    /** 지정한 앱(TRANSPORT/CALENDAR)에 구독한 사용자의 모든 기기로 발송(비동기). 대상 기기 수 반환 */
+    public int sendToUserApp(String kakaoId, String app, String type, String title, String body, String url, String icon, String tag) {
+        List<PushSubDto> subs = dao.getSubsByKakaoId(kakaoId, app);
+        sendAsync(subs, type, kakaoId, null, title, body, url, icon, tag);
+        return subs.size();
+    }
+
+    public int countSubs(String kakaoId, String app) {
+        return dao.getSubsByKakaoId(kakaoId, app).size();
+    }
+
     private void sendAsync(final List<PushSubDto> subs, final String type, final String actorKakaoId, final String actorName,
-                           final String title, final String body, String url) {
+                           final String title, final String body, String url, final String icon, final String tag) {
         if (subs == null || subs.isEmpty()) return;
-        final String payload = "{\"title\":" + json(title) + ",\"body\":" + json(body) + ",\"url\":" + json(url) + "}";
+        final String payload = "{\"title\":" + json(title) + ",\"body\":" + json(body) + ",\"url\":" + json(url)
+                + (icon != null ? ",\"icon\":" + json(icon) : "") + (tag != null ? ",\"tag\":" + json(tag) : "") + "}";
         executor.submit(new Runnable() {
             @Override
             public void run() {

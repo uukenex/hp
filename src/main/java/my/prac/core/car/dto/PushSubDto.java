@@ -11,6 +11,7 @@ public class PushSubDto implements Serializable {
     private String p256dh;
     private String auth;
     private String userAgent;
+    private String app = "TRANSPORT";   // 구독한 앱 (TRANSPORT / CALENDAR)
 
     public long getSubId() { return subId; }
     public void setSubId(long subId) { this.subId = subId; }
@@ -26,6 +27,9 @@ public class PushSubDto implements Serializable {
 
     public String getAuth() { return auth; }
     public void setAuth(String auth) { this.auth = auth; }
+
+    public String getApp() { return app; }
+    public void setApp(String app) { this.app = app; }
 
     public String getUserAgent() { return userAgent; }
     public void setUserAgent(String userAgent) { this.userAgent = userAgent; }
