@@ -146,7 +146,16 @@
   .w-point { min-width: 120px; } .w-model { min-width: 78px; } .w-vin { min-width: 105px; }
   .w-price { min-width: 88px; } .w-extra { min-width: 96px; } .w-remark { min-width: 140px; }
 
+  .zoom-ctl { display: none; gap: 4px; }
+  .zoom-ctl button { background: #fff; border: 1px solid #90a4ae; color: #37474f; border-radius: 6px; padding: 6px 12px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  #grid { transform-origin: 0 0; }
+  #zoomBox { overflow: hidden; }
+
   @media (max-width: 700px) {
+    .zoom-ctl { display: inline-flex; }
+    /* 모바일: 좌측 고정/상단 고정을 끄고(확대·축소 시 어긋남 방지) 전체 보기로 표시 */
+    th.th-no, td.td-no, td[data-col="0"], th[data-col="0"] { position: static; box-shadow: none; }
+    thead th, tfoot td { position: static; }
     .container { padding: 8px 8px 60px; }
     .summary-row { grid-template-columns: 1fr 1fr; }
     .top-bar h1 { font-size: 14px; }
@@ -183,6 +192,11 @@
     <button type="button" class="btn-save" onclick="manualSave()">💾 저장</button>
     <span class="auto-note">다른 행으로 이동하면 자동저장됩니다</span>
     <button type="button" class="btn-hist" onclick="openHistory()">🕘 변경이력</button>
+    <span class="zoom-ctl" id="zoomCtl">
+      <button type="button" onclick="zoomBy(0.8)">−</button>
+      <button type="button" onclick="zoomFit()">전체</button>
+      <button type="button" onclick="zoomBy(1.25)">＋</button>
+    </span>
     <button type="button" class="btn-col-filter" onclick="toggleColFilter()">⚙ 컬럼</button>
   </div>
 
@@ -198,12 +212,14 @@
   </div>
 
   <div class="grid-wrap">
+    <div id="zoomBox">
     <table id="grid">
       <thead><tr id="headRow"></tr></thead>
       <tbody id="gridBody"></tbody>
       <tbody id="fillBody"><tr id="fillRow"><td colspan="17"></td></tr></tbody>
       <tfoot><tr id="footRow"></tr></tfoot>
     </table>
+    </div>
   </div>
 
 </div>
@@ -254,6 +270,8 @@ var COLS = [
   { key:'remark',         label:'비고',          type:'text',  w:'w-remark' }
 ];
 var DATE_IDX = 0, SUPPLY_IDX = 7, COMPANY_IDX = 8;
+/* 열 기준 너비(px) - 모바일 전체 보기 배율 계산에 사용 */
+var COL_PX = [118, 78, 88, 120, 120, 78, 105, 88, 88, 96, 96, 96, 96, 96, 140];
 
 var rows = [];          // {id, tr, inputs[], timer, saving, dirty}
 var curMonth = '';
@@ -376,12 +394,14 @@ function buildHeader() {
   var foot = document.getElementById('footRow');
   head.innerHTML = '';
   foot.innerHTML = '';
-  var thNo = document.createElement('th'); thNo.textContent = '#'; thNo.className = 'th-no'; head.appendChild(thNo);
+  var thNo = document.createElement('th'); thNo.textContent = '#'; thNo.className = 'th-no'; thNo.style.width = '34px'; head.appendChild(thNo);
   var tfNo = document.createElement('td'); tfNo.className = 'td-no'; foot.appendChild(tfNo);
   COLS.forEach(function(c, i) {
     var th = document.createElement('th');
     th.textContent = c.label;
     th.dataset.col = i;
+    th.style.minWidth = (COL_PX[i] || 90) + "px";
+    th.style.width = (COL_PX[i] || 90) + "px";
     if (c.red) th.className = 'red';
     head.appendChild(th);
     var td = document.createElement('td');
@@ -391,7 +411,7 @@ function buildHeader() {
     if (i === COMPANY_IDX) { td.className = 'foot-company'; td.id = 'footCompany'; }
     foot.appendChild(td);
   });
-  head.appendChild(document.createElement('th'));
+  var thDel = document.createElement('th'); thDel.style.width = '34px'; head.appendChild(thDel);
   foot.appendChild(document.createElement('td'));
 }
 
@@ -711,6 +731,7 @@ function applyColVisibility() {
   document.getElementById('cardSupply').style.display  = sh ? 'none' : '';
   document.getElementById('cardCompany').style.display = ch ? 'none' : '';
   document.getElementById('cardMargin').style.display  = (sh || ch) ? 'none' : '';
+  fitGrid();   // 열 표시/숨김에 맞춰 모바일 전체 보기 배율 재계산
 }
 function buildColFilterUI() {
   var box = document.getElementById('colFilterList');
@@ -737,15 +758,49 @@ function toggleColFilter() {
 }
 
 /* ===== 화면 높이 채우기 ===== */
+/* ===== 화면 맞춤 / 모바일 확대·축소 ===== */
+var zoomLevel = null;   // null = 전체 보기(가로 폭에 맞춤), 숫자 = 배율
+var curScale = 1;
+function isMobile() { return window.matchMedia('(max-width: 700px)').matches; }
+
 function fitGrid() {
   var wrap = document.querySelector('.grid-wrap');
-  var h = Math.max(260, window.innerHeight - wrap.getBoundingClientRect().top - 16);
-  wrap.style.height = h + 'px';
+  var box = document.getElementById('zoomBox');
+  var grid = document.getElementById('grid');
   var td = document.querySelector('#fillRow td');
+  var h = Math.max(isMobile() ? 320 : 260, window.innerHeight - wrap.getBoundingClientRect().top - 16);
+  wrap.style.height = h + 'px';
   td.style.height = '0px';
-  var used = document.getElementById('grid').offsetHeight;
-  td.style.height = Math.max(0, wrap.clientHeight - used) + 'px';
+
+  if (!isMobile()) {   // 데스크탑: 배율 없음
+    grid.style.transform = '';
+    box.style.width = ''; box.style.height = '';
+    curScale = 1;
+    grid.style.tableLayout = ''; grid.style.width = '';
+    td.style.height = Math.max(0, wrap.clientHeight - grid.offsetHeight) + 'px';
+    return;
+  }
+
+  // 모바일: 원래 크기를 측정한 뒤 배율 적용
+  // 열 너비를 고정해 입력칸 기본 크기와 무관하게 전체 폭을 계산 (보이는 열만 합산)
+  var hidden = getHiddenCols();
+  var natW = 68;   // # 열 + 삭제 열
+  COL_PX.forEach(function(w, i) { if (hidden.indexOf(i) < 0) natW += w; });
+  grid.style.tableLayout = 'fixed';
+  grid.style.width = natW + 'px';
+  grid.style.transform = 'none';
+  box.style.width = natW + 'px'; box.style.height = '';
+  var fit = Math.min(1, (wrap.clientWidth - 2) / natW);
+  var s = zoomLevel == null ? fit : Math.min(2, Math.max(fit, zoomLevel));
+  curScale = s;
+  td.style.height = Math.max(0, wrap.clientHeight / s - grid.offsetHeight) + 'px';   // 남는 높이를 빈 줄로 채움
+  var natH = grid.offsetHeight;
+  grid.style.transform = 'scale(' + s + ')';
+  box.style.width = Math.ceil(natW * s) + 'px';
+  box.style.height = Math.ceil(natH * s) + 'px';
 }
+function zoomBy(f) { zoomLevel = curScale * f; fitGrid(); zoomLevel = curScale; }
+function zoomFit() { zoomLevel = null; fitGrid(); document.querySelector('.grid-wrap').scrollLeft = 0; }
 window.addEventListener('resize', fitGrid);
 
 /* ===== 수동 저장 ===== */
