@@ -11,12 +11,15 @@ import my.prac.api.car.controller.KakaoLoginController;
 import my.prac.core.car.dto.CarUserDto;
 import my.prac.core.car.dto.TuserKakaoDto;
 import my.prac.core.car.service.TuserKakaoService;
+import my.prac.core.car.push.CarPushService;
 
 public class CarSessionInterceptor extends HandlerInterceptorAdapter {
 
     private final TuserKakaoService tuserKakaoService;
+    private final CarPushService carPushService;
 
-    public CarSessionInterceptor(TuserKakaoService tuserKakaoService) {
+    public CarSessionInterceptor(TuserKakaoService tuserKakaoService, CarPushService carPushService) {
+        this.carPushService = carPushService;
         this.tuserKakaoService = tuserKakaoService;
     }
 
@@ -40,6 +43,7 @@ public class CarSessionInterceptor extends HandlerInterceptorAdapter {
                 carUser.setNickname(saved.getNickname());
                 carUser.setProfileImage(saved.getProfileImage());
                 session.setAttribute("carUser", carUser);
+                carPushService.notifyLogin(carUser);   // 자동로그인(새 세션)도 접속 알림 (30분 간격 제한)
                 return true;
             }
         }

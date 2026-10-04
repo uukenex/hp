@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.prac.core.car.dao.CarPushDAO">
+
+    <resultMap id="subMap" type="my.prac.core.car.dto.PushSubDto">
+        <id     column="SUB_ID"     property="subId"/>
+        <result column="KAKAO_ID"   property="kakaoId"/>
+        <result column="ENDPOINT"   property="endpoint"/>
+        <result column="P256DH"     property="p256dh"/>
+        <result column="AUTH"       property="auth"/>
+        <result column="USER_AGENT" property="userAgent"/>
+    </resultMap>
+
+    <!-- 같은 endpoint 면 사용자/키 갱신, 없으면 등록 -->
+    <update id="mergeSub" parameterType="my.prac.core.car.dto.PushSubDto">
+        MERGE INTO TCAR_PUSH_SUB T
+        USING (SELECT #{endpoint} AS ENDPOINT FROM DUAL) S
+        ON (T.ENDPOINT = S.ENDPOINT)
+        WHEN MATCHED THEN UPDATE SET
+            T.KAKAO_ID   = #{kakaoId},
+            T.P256DH     = #{p256dh},
+            T.AUTH       = #{auth},
+            T.USER_AGENT = #{userAgent, jdbcType=VARCHAR}
+        WHEN NOT MATCHED THEN INSERT (SUB_ID, KAKAO_ID, ENDPOINT, P256DH, AUTH, USER_AGENT, CREATED_AT)
+            VALUES (TCAR_PUSH_SUB_SEQ.NEXTVAL, #{kakaoId}, #{endpoint}, #{p256dh}, #{auth}, #{userAgent, jdbcType=VARCHAR}, SYSDATE)
+    </update>
+
+    <delete id="deleteByEndpoint">
+        DELETE FROM TCAR_PUSH_SUB WHERE ENDPOINT = #{endpoint}
+    </delete>
+
+    <select id="getSubsByKakaoId" resultMap="subMap">
+        SELECT SUB_ID, KAKAO_ID, ENDPOINT, P256DH, AUTH, USER_AGENT
+        FROM TCAR_PUSH_SUB
+        WHERE KAKAO_ID = #{kakaoId}
+    </select>
+
+    <select id="getLoginNotifySubs" resultMap="subMap">
+        SELECT S.SUB_ID, S.KAKAO_ID, S.ENDPOINT, S.P256DH, S.AUTH, S.USER_AGENT
+        FROM TCAR_PUSH_SUB S
+        JOIN TCAR_USER_KAKAO U ON U.KAKAO_ID = S.KAKAO_ID
+        WHERE U.NOTIFY_LOGIN = 'Y'
+        <if test="exceptKakaoId != null">
+            AND S.KAKAO_ID != #{exceptKakaoId}
+        </if>
+    </select>
+
+    <select id="getConfig" resultType="string">
+        SELECT CFG_VALUE FROM TCAR_APP_CONFIG WHERE CFG_KEY = #{key}
+    </select>
+
+    <update id="mergeConfig">
+        MERGE INTO TCAR_APP_CONFIG T
+        USING (SELECT #{key} AS CFG_KEY FROM DUAL) S
+        ON (T.CFG_KEY = S.CFG_KEY)
+        WHEN MATCHED THEN UPDATE SET T.CFG_VALUE = #{value}
+        WHEN NOT MATCHED THEN INSERT (CFG_KEY, CFG_VALUE) VALUES (#{key}, #{value})
+    </update>
+
+</mapper>

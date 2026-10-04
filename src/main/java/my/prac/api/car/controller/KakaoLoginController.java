@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import my.prac.core.car.dto.CarUserDto;
 import my.prac.core.car.dto.TuserKakaoDto;
 import my.prac.core.car.service.TuserKakaoService;
+import my.prac.core.car.push.CarPushService;
 
 @Controller
 public class KakaoLoginController {
@@ -50,6 +51,9 @@ public class KakaoLoginController {
 
     @Autowired
     private TuserKakaoService tuserKakaoService;
+
+    @Autowired
+    private CarPushService carPushService;
 
     @GetMapping("/car/login")
     public String loginPage() {
@@ -82,6 +86,7 @@ public class KakaoLoginController {
 
             // 세션 저장
             session.setAttribute("carUser", kakaoInfo);
+            carPushService.notifyLogin(kakaoInfo);   // 개발자(NOTIFY_LOGIN)에게 푸시 알림
 
             // 자동로그인 쿠키 (30일)
             Cookie cookie = new Cookie(AUTO_LOGIN_COOKIE, saved.getAutoLoginToken());

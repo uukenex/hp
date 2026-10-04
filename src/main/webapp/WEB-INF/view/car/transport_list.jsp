@@ -5,6 +5,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>차량 운송 관리</title>
+<link rel="manifest" href="${pageContext.request.contextPath}/transport/manifest.json">
+<meta name="theme-color" content="#1565c0">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Apple SD Gothic Neo','Malgun Gothic', sans-serif; background: #f5f7fa; font-size: 13px; }
@@ -17,6 +19,8 @@
   .top-bar h1 { font-size: 16px; font-weight: 700; color: #1565c0; }
   .nav-links { display: flex; gap: 14px; align-items: center; }
   .nav-links a { color: #1976d2; text-decoration: none; font-size: 12px; }
+  .push-btn { background: #fff; border: 1px solid #90caf9; color: #1565c0; border-radius: 14px; padding: 4px 10px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .push-btn.on { background: #e3f0fb; }
 
   .container { padding: 12px 12px 60px; }
 
@@ -156,6 +160,8 @@
 <div class="top-bar">
   <h1>🚚 차량 운송 관리 <span id="roleBadge" style="font-size:11px;font-weight:700;color:#fff;background:#6a1b9a;border-radius:10px;padding:2px 8px;margin-left:6px;display:none;">관리자</span></h1>
   <div class="nav-links">
+    <button type="button" id="pushBtn" class="push-btn" style="display:none;" onclick="togglePush()">🔕 알림 켜기</button>
+    <button type="button" id="pushTest" class="push-btn" style="display:none;" onclick="testPush()">테스트</button>
     <a href="${pageContext.request.contextPath}/">홈</a>
     <a href="${pageContext.request.contextPath}/car/logout">로그아웃</a>
   </div>
@@ -671,6 +677,7 @@ function loadMonth(ym) {
   return api('/transport/api/list?month=' + encodeURIComponent(ym)).then(function(res) {
     curMonth = res.month;
     document.getElementById('roleBadge').style.display = res.isAdmin ? 'inline' : 'none';
+    if (res.isAdmin) initPush();
     buildMonthBtns();
     fillDatalist('driverNameList', res.driverNames);
     fillDatalist('companyList', res.companies);
@@ -940,6 +947,75 @@ function repositionSuggest() {
 }
 window.addEventListener('resize', repositionSuggest);
 document.querySelector('.grid-wrap').addEventListener('scroll', repositionSuggest);
+
+/* ===== PWA / 푸시 알림 ===== */
+var pushSub = null;
+function pushSupported() { return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; }
+
+function b64ToU8(s) {
+  var pad = new Array((4 - s.length % 4) % 4 + 1).join('=');
+  var raw = atob((s + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  var out = new Uint8Array(raw.length);
+  for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+
+function updatePushBtn() {
+  var btn = document.getElementById('pushBtn');
+  btn.textContent = pushSub ? '🔔 알림 켜짐' : '🔕 알림 켜기';
+  btn.className = 'push-btn' + (pushSub ? ' on' : '');
+  document.getElementById('pushTest').style.display = pushSub ? 'inline-block' : 'none';
+}
+
+/* 서비스워커는 모든 사용자에게 등록(설치 가능한 앱), 알림 버튼은 관리자에게만 표시 */
+function registerSW() {
+  if (!('serviceWorker' in navigator)) return Promise.reject(new Error('no sw'));
+  return navigator.serviceWorker.register(CTX + '/transport/sw.js', { scope: CTX + '/transport/' })
+    .then(function() { return navigator.serviceWorker.ready; });
+}
+
+function initPush() {
+  if (!pushSupported()) return;
+  document.getElementById('pushBtn').style.display = 'inline-block';
+  registerSW().then(function(reg) { return reg.pushManager.getSubscription(); })
+    .then(function(sub) { pushSub = sub; updatePushBtn(); })
+    .catch(function() {});
+}
+
+function togglePush() {
+  if (pushSub) {
+    if (!confirm('이 기기의 알림을 끌까요?')) return;
+    var ep = pushSub.endpoint;
+    pushSub.unsubscribe().then(function() {
+      return api('/transport/push/unsubscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint: ep }) });
+    }).then(function() { pushSub = null; updatePushBtn(); }).catch(function() { alert('알림 해제에 실패했습니다.'); });
+    return;
+  }
+  Notification.requestPermission().then(function(perm) {
+    if (perm !== 'granted') { alert('알림 권한이 허용되지 않았습니다.\n브라우저(사이트) 설정에서 알림을 허용해 주세요.'); return; }
+    return registerSW().then(function(reg) {
+      return api('/transport/push/key').then(function(r) {
+        return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToU8(r.key) });
+      });
+    }).then(function(sub) {
+      return api('/transport/push/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sub.toJSON()) })
+        .then(function(r) {
+          if (!r.ok) throw new Error('subscribe failed');
+          pushSub = sub; updatePushBtn();
+          return testPush();
+        });
+    });
+  }).catch(function() { alert('알림 설정에 실패했습니다. (HTTPS 접속인지 확인해 주세요)'); });
+}
+
+function testPush() {
+  return api('/transport/push/test', { method: 'POST' }).then(function(r) {
+    if (!r.devices) alert('등록된 기기가 없습니다.');
+  }).catch(function() { alert('테스트 알림 요청에 실패했습니다.'); });
+}
+
+// 앱 설치(홈 화면 추가)를 위해 모든 사용자에게 서비스워커 등록
+if ('serviceWorker' in navigator) { registerSW().catch(function() {}); }
 
 /* ===== 초기화 ===== */
 (function() {
