@@ -30,6 +30,7 @@ import my.prac.core.car.dto.CarTransportHistoryDto;
 import my.prac.core.car.dto.CarUserDto;
 import my.prac.core.car.dto.TuserKakaoDto;
 import my.prac.core.car.service.TuserKakaoService;
+import my.prac.core.car.push.CarPushService;
 import my.prac.core.car.service.CarTransportService;
 
 @Controller
@@ -41,6 +42,9 @@ public class CarTransportController {
 
     @Autowired
     private TuserKakaoService tuserKakaoService;
+
+    @Resource(name = "core.car.CarPushService")
+    private CarPushService pushService;
 
     /** 메인 페이지 (SPA 셸) - 데이터는 /transport/api/* 로 로드 */
     @GetMapping("/list")
@@ -108,6 +112,7 @@ public class CarTransportController {
     public ResponseEntity<Map<String, Object>> apiSave(@RequestBody CarTransportDto dto, HttpSession session) {
         String by = currentUser(session);
         String me = kakaoId(session);
+        boolean changed = false;   // 실제로 추가/변경이 있었는지
         if (dto.getId() > 0) {
             CarTransportDto before = carTransportService.getDetail(dto.getId());
             if (before == null || !canAccess(session, before)) {
@@ -117,14 +122,19 @@ public class CarTransportController {
             String diff = diff(before, dto);
             if (diff.length() > 0) {
                 writeHistory(dto.getId(), "UPDATE", dto, diff, by);
+                changed = true;
             }
         } else {
             dto.setCreatedBy(me); // 클라이언트 값은 무시하고 로그인 사용자로 고정
             carTransportService.insert(dto);
             writeHistory(dto.getId(), "INSERT", dto, describe(dto), by);
+            changed = true;
         }
         Map<String, Object> res = new HashMap<>();
         res.put("id", dto.getId());
+        // 개발자에게 "작업 시작" 푸시 (사용자별 6시간에 한 번, 비동기)
+        Object cu = session.getAttribute("carUser");
+        if (changed && cu instanceof CarUserDto) pushService.notifyWork((CarUserDto) cu);
         return new ResponseEntity<Map<String, Object>>(res, HttpStatus.OK);
     }
 

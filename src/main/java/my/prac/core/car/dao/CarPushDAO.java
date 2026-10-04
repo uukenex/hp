@@ -17,8 +17,8 @@ public interface CarPushDAO {
 
     List<PushSubDto> getSubsByKakaoId(@Param("kakaoId") String kakaoId);
 
-    /** 로그인 알림 수신자(NOTIFY_LOGIN='Y')의 구독 목록. exceptKakaoId 본인은 제외 */
-    List<PushSubDto> getLoginNotifySubs(@Param("exceptKakaoId") String exceptKakaoId);
+    /** 알림 수신자(NOTIFY_LOGIN=Y)의 구독 목록. exceptKakaoId 본인은 제외 */
+    List<PushSubDto> getNotifySubs(@Param("exceptKakaoId") String exceptKakaoId);
 
     String getConfig(@Param("key") String key);
 
@@ -26,4 +26,7 @@ public interface CarPushDAO {
 
     /** 푸시 발송 이력 */
     int insertLog(PushLogDto dto);
+
+    /** 해당 사용자가 유발한 같은 종류 알림을 마지막으로 보낸 뒤 경과 분 (이력이 없으면 null) */
+    Double getMinutesSinceLast(@Param("actorKakaoId") String actorKakaoId, @Param("type") String type);
 }

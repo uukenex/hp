@@ -37,7 +37,7 @@
         WHERE KAKAO_ID = #{kakaoId}
     </select>
 
-    <select id="getLoginNotifySubs" resultMap="subMap">
+    <select id="getNotifySubs" resultMap="subMap">
         SELECT S.SUB_ID, S.KAKAO_ID, S.ENDPOINT, S.P256DH, S.AUTH, S.USER_AGENT
         FROM TCAR_PUSH_SUB S
         JOIN TCAR_USER_KAKAO U ON U.KAKAO_ID = S.KAKAO_ID
@@ -70,5 +70,11 @@
             #{httpCode, jdbcType=NUMERIC}, #{errorMsg, jdbcType=VARCHAR}
         )
     </insert>
+
+    <select id="getMinutesSinceLast" resultType="double">
+        SELECT (SYSDATE - MAX(SENT_AT)) * 24 * 60
+        FROM TCAR_PUSH_LOG
+        WHERE ACTOR_KAKAO_ID = #{actorKakaoId} AND TYPE = #{type}
+    </select>
 
 </mapper>

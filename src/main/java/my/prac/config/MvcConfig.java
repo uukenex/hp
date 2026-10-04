@@ -16,7 +16,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
 import my.prac.core.car.service.TuserKakaoService;
-import my.prac.core.car.push.CarPushService;
 
 @Configuration
 @ComponentScan({ "my.prac.api.wedding.controller", "my.prac.api.car.controller" })
@@ -31,9 +30,6 @@ public class MvcConfig extends WebMvcConfigurerAdapter {
 
 	@Autowired
 	private TuserKakaoService tuserKakaoService;
-
-	@Autowired
-	private CarPushService carPushService;
 
 	@Bean
 	public ViewResolver internalResourceViewResolver() {
@@ -91,7 +87,7 @@ public class MvcConfig extends WebMvcConfigurerAdapter {
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
 		registry.addInterceptor(new SessionInterceptor()).addPathPatterns("/session/**");
-		registry.addInterceptor(new CarSessionInterceptor(tuserKakaoService, carPushService)).addPathPatterns("/transport/**")
+		registry.addInterceptor(new CarSessionInterceptor(tuserKakaoService)).addPathPatterns("/transport/**")
 				// PWA 리소스는 로그인 없이 접근 가능해야 함 (manifest, service worker, 아이콘)
 				.excludePathPatterns("/transport/manifest.json", "/transport/sw.js", "/transport/icon/**");
 	}

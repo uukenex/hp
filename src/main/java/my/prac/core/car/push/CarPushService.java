@@ -33,12 +33,12 @@ public class CarPushService {
     private static final String CFG_PUB = "VAPID_PUBLIC";
     private static final String CFG_PRIV = "VAPID_PRIVATE";
     private static final String CFG_SUB = "VAPID_SUBJECT";
-    private static final long LOGIN_NOTIFY_INTERVAL_MS = 30L * 60 * 1000;   // 같은 사용자 로그인 알림 최소 간격
+    private static final long WORK_NOTIFY_INTERVAL_MS = 6L * 60 * 60 * 1000;   // 같은 사용자 작업 알림 최소 간격(6시간)
 
     @Resource(name = "core.car.CarPushDAO")
     private CarPushDAO dao;
 
-    private final Map<String, Long> lastLoginNotify = new ConcurrentHashMap<String, Long>();
+    private final Map<String, Long> lastWorkNotify = new ConcurrentHashMap<String, Long>();
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor(new ThreadFactory() {
         @Override
@@ -117,24 +117,41 @@ public class CarPushService {
         return subs.size();
     }
 
-    /** 사용자 로그인 시 개발자(NOTIFY_LOGIN='Y')에게 알림. 같은 사용자는 30분에 한 번만 */
-    public void notifyLogin(CarUserDto user) {
+    /**
+     * 사용자가 운송 데이터를 추가/수정해서 저장할 때 개발자(NOTIFY_LOGIN='Y')에게 "작업을 시작했습니다" 알림.
+     * 같은 사용자에 대해 마지막 발송 후 6시간 이내에는 다시 보내지 않음 (서버 재기동 후에도 이력 기준으로 판단).
+     */
+    public void notifyWork(final CarUserDto user) {
         if (user == null || user.getKakaoId() == null) return;
-        try {
-            long now = System.currentTimeMillis();
-            Long last = lastLoginNotify.get(user.getKakaoId());
-            if (last != null && now - last < LOGIN_NOTIFY_INTERVAL_MS) return;
+        final String actorId = user.getKakaoId();
+        final long now = System.currentTimeMillis();
 
-            List<PushSubDto> subs = dao.getLoginNotifySubs(user.getKakaoId());
-            if (subs.isEmpty()) return;   // 수신 기기가 없으면 간격 기록도 하지 않음
-            lastLoginNotify.put(user.getKakaoId(), now);
+        // 빠른 경로: 메모리에서 6시간 이내면 즉시 종료. 아니면 먼저 선점해 동시 저장 시 중복 발송 방지
+        Long last = lastWorkNotify.get(actorId);
+        if (last != null && now - last < WORK_NOTIFY_INTERVAL_MS) return;
+        lastWorkNotify.put(actorId, now);
 
-            String name = user.getNickname() == null ? "사용자" : user.getNickname();
-            String time = new SimpleDateFormat("HH:mm").format(new Date(now));
-            sendAsync(subs, "LOGIN", user.getKakaoId(), name, "🚚 운송관리 로그인", name + "님이 로그인했습니다 (" + time + ")", "list");
-        } catch (Exception e) {
-            logger.warn("로그인 알림 실패", e);   // 알림 실패가 로그인에 영향을 주지 않도록
-        }
+        final String name = user.getNickname() == null ? "사용자" : user.getNickname();
+        executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // 서버 재기동 등으로 메모리가 비었어도 DB 발송 이력으로 6시간 확인
+                    Double mins = dao.getMinutesSinceLast(actorId, "WORK");
+                    if (mins != null && mins * 60 * 1000 < WORK_NOTIFY_INTERVAL_MS) return;
+
+                    List<PushSubDto> subs = dao.getNotifySubs(actorId);
+                    if (subs.isEmpty()) {
+                        lastWorkNotify.remove(actorId);   // 받을 기기가 없으면 선점 해제
+                        return;
+                    }
+                    sendAsync(subs, "WORK", actorId, name, "🚚 운송관리", name + "님이 작업을 시작했습니다", "list");
+                } catch (Exception e) {
+                    lastWorkNotify.remove(actorId);
+                    logger.warn("작업 알림 실패", e);   // 알림 실패가 저장에 영향을 주지 않도록
+                }
+            }
+        });
     }
 
     private void sendAsync(final List<PushSubDto> subs, final String type, final String actorKakaoId, final String actorName,
