@@ -151,13 +151,44 @@
   #grid { transform-origin: 0 0; }
   #zoomBox { overflow: hidden; }
 
+  /* 로딩 오버레이: 화면을 어둡게 하고 클릭 차단 + 회전 표시 */
+  .loading { display: none; position: fixed; inset: 0; z-index: 900; background: rgba(0,0,0,0.5); flex-direction: column; align-items: center; justify-content: center; gap: 14px; color: #fff; font-size: 14px; }
+  .loading.show { display: flex; }
+  .spinner { width: 46px; height: 46px; border: 5px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .push-btn { white-space: nowrap; }
+
   @media (max-width: 700px) {
     .zoom-ctl { display: inline-flex; }
     /* 모바일: 좌측 고정/상단 고정을 끄고(확대·축소 시 어긋남 방지) 전체 보기로 표시 */
     th.th-no, td.td-no, td[data-col="0"], th[data-col="0"] { position: static; box-shadow: none; }
     thead th, tfoot td { position: static; }
     .container { padding: 8px 8px 60px; }
-    .summary-row { grid-template-columns: 1fr 1fr; }
+    /* 상단바: 한 줄로 */
+    .top-bar { padding: 0 10px; height: 48px; }
+    .nav-links { gap: 8px; flex-shrink: 0; white-space: nowrap; }
+    .push-btn { padding: 4px 8px; font-size: 12px; }
+    .push-btn .lbl { display: none; }
+    .top-bar h1 { white-space: nowrap; }
+    #roleBadge { margin-left: 4px !important; padding: 1px 6px !important; font-size: 10px !important; }
+    /* 도구줄: 월 / 조회 / 버튼 순으로 촘촘하게 */
+    .toolbar { gap: 6px; margin-bottom: 8px; }
+    .toolbar .spacer { display: none; }
+    #monthBtns { flex: 1 1 100%; gap: 6px !important; }
+    .month-btn { flex: 1; padding: 7px 4px; font-size: 13px; }
+    .filter-in { flex: 1 1 40%; width: auto; min-width: 0; padding: 6px 8px; }
+    .auto-note { display: none; }
+    .btn-save { padding: 7px 14px; }
+    .btn-hist, .btn-col-filter { padding: 6px 10px; font-size: 12px; white-space: nowrap; }
+    .zoom-ctl { margin-left: auto; }
+    .zoom-ctl button { padding: 5px 10px; font-size: 13px; }
+    .save-status { order: 20; flex: 1 1 100%; min-width: 0; text-align: right; font-size: 11px; }
+    /* 요약 카드: 한 줄 4칸 */
+    .summary-row { grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 8px; }
+    .summary-card { padding: 6px 2px; border-radius: 8px; }
+    .s-label { font-size: 10px; white-space: nowrap; }
+    .s-value { font-size: 12px; }
+    .s-unit { display: none; }
     .top-bar h1 { font-size: 14px; }
     .grid-wrap { min-height: 320px; }
     .cell { font-size: 16px; height: 40px; }
@@ -169,12 +200,14 @@
 <div class="top-bar">
   <h1>🚚 차량 운송 관리 <span id="roleBadge" style="font-size:11px;font-weight:700;color:#fff;background:#6a1b9a;border-radius:10px;padding:2px 8px;margin-left:6px;display:none;">관리자</span></h1>
   <div class="nav-links">
-    <button type="button" id="pushBtn" class="push-btn" style="display:none;" onclick="togglePush()">🔕 알림 켜기</button>
+    <button type="button" id="pushBtn" class="push-btn" style="display:none;" onclick="togglePush()">🔕<span class="lbl"> 알림 켜기</span></button>
     <button type="button" id="pushTest" class="push-btn" style="display:none;" onclick="testPush()">테스트</button>
     <a href="${pageContext.request.contextPath}/">홈</a>
     <a href="${pageContext.request.contextPath}/car/logout">로그아웃</a>
   </div>
 </div>
+
+<div id="loading" class="loading show"><div class="spinner"></div><div class="loading-txt">불러오는 중…</div></div>
 
 <datalist id="driverNameList"></datalist>
 <datalist id="companyList"></datalist>
@@ -692,8 +725,11 @@ function fillDatalist(id, arr) {
   });
 }
 
+function showLoading() { document.getElementById('loading').classList.add('show'); }
+function hideLoading() { document.getElementById('loading').classList.remove('show'); }
+
 function loadMonth(ym) {
-  setStatus('saving', '불러오는 중…');
+  showLoading();
   return api('/transport/api/list?month=' + encodeURIComponent(ym)).then(function(res) {
     curMonth = res.month;
     document.getElementById('roleBadge').style.display = res.isAdmin ? 'inline' : 'none';
@@ -710,11 +746,11 @@ function loadMonth(ym) {
     updateTotals();
     applyColVisibility();
     applyFilter();
-    setStatus('', '');
+    setStatus("", "");
     try { localStorage.setItem('transport_month', curMonth); } catch(e) {}
   }).catch(function() {
     setStatus('error', '불러오기 실패 (로그인 만료 시 새로고침)');
-  });
+  }).then(hideLoading);
 }
 
 /* ===== 컬럼 필터 ===== */
@@ -1017,7 +1053,7 @@ function b64ToU8(s) {
 
 function updatePushBtn() {
   var btn = document.getElementById('pushBtn');
-  btn.textContent = pushSub ? '🔔 알림 켜짐' : '🔕 알림 켜기';
+  btn.innerHTML = pushSub ? '🔔<span class="lbl"> 알림 켜짐</span>' : '🔕<span class="lbl"> 알림 켜기</span>';
   btn.className = 'push-btn' + (pushSub ? ' on' : '');
   document.getElementById('pushTest').style.display = pushSub ? 'inline-block' : 'none';
 }
