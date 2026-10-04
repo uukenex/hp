@@ -157,6 +157,8 @@
   .spinner { width: 46px; height: 46px; border: 5px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .push-btn { white-space: nowrap; }
+  /* 알림 설정은 모바일에서만 표시 (PC 에서는 숨김) */
+  @media (min-width: 701px) { #pushBtn, #pushTest { display: none !important; } }
 
   @media (max-width: 700px) {
     .zoom-ctl { display: inline-flex; }
