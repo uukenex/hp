@@ -59,4 +59,16 @@
         WHEN NOT MATCHED THEN INSERT (CFG_KEY, CFG_VALUE) VALUES (#{key}, #{value})
     </update>
 
+    <insert id="insertLog" parameterType="my.prac.core.car.dto.PushLogDto">
+        INSERT INTO TCAR_PUSH_LOG (
+            LOG_ID, SENT_AT, TYPE, TARGET_KAKAO_ID, SUB_ID, ACTOR_KAKAO_ID, ACTOR_NAME,
+            TITLE, BODY, RESULT, HTTP_CODE, ERROR_MSG
+        ) VALUES (
+            TCAR_PUSH_LOG_SEQ.NEXTVAL, SYSDATE, #{type}, #{targetKakaoId, jdbcType=VARCHAR}, #{subId, jdbcType=NUMERIC},
+            #{actorKakaoId, jdbcType=VARCHAR}, #{actorName, jdbcType=VARCHAR},
+            #{title, jdbcType=VARCHAR}, #{body, jdbcType=VARCHAR}, #{result},
+            #{httpCode, jdbcType=NUMERIC}, #{errorMsg, jdbcType=VARCHAR}
+        )
+    </insert>
+
 </mapper>

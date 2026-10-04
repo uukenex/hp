@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import my.prac.core.car.dao.CarPushDAO;
 import my.prac.core.car.dto.CarUserDto;
+import my.prac.core.car.dto.PushLogDto;
 import my.prac.core.car.dto.PushSubDto;
 
 /** 웹 푸시 구독 관리 및 발송 */
@@ -112,7 +113,7 @@ public class CarPushService {
     /** 해당 사용자의 모든 기기로 발송(비동기). 대상 기기 수 반환 */
     public int sendToUser(String kakaoId, String title, String body, String url) {
         List<PushSubDto> subs = dao.getSubsByKakaoId(kakaoId);
-        sendAsync(subs, title, body, url);
+        sendAsync(subs, "TEST", kakaoId, null, title, body, url);
         return subs.size();
     }
 
@@ -130,61 +131,112 @@ public class CarPushService {
 
             String name = user.getNickname() == null ? "사용자" : user.getNickname();
             String time = new SimpleDateFormat("HH:mm").format(new Date(now));
-            sendAsync(subs, "🚚 운송관리 로그인", name + "님이 로그인했습니다 (" + time + ")", "list");
+            sendAsync(subs, "LOGIN", user.getKakaoId(), name, "🚚 운송관리 로그인", name + "님이 로그인했습니다 (" + time + ")", "list");
         } catch (Exception e) {
             logger.warn("로그인 알림 실패", e);   // 알림 실패가 로그인에 영향을 주지 않도록
         }
     }
 
-    private void sendAsync(final List<PushSubDto> subs, String title, String body, String url) {
+    private void sendAsync(final List<PushSubDto> subs, final String type, final String actorKakaoId, final String actorName,
+                           final String title, final String body, String url) {
         if (subs == null || subs.isEmpty()) return;
         final String payload = "{\"title\":" + json(title) + ",\"body\":" + json(body) + ",\"url\":" + json(url) + "}";
         executor.submit(new Runnable() {
             @Override
             public void run() {
                 for (PushSubDto s : subs) {
+                    PushLogDto log = new PushLogDto();
+                    log.setType(type);
+                    log.setTargetKakaoId(s.getKakaoId());
+                    log.setSubId(s.getSubId());
+                    log.setActorKakaoId(actorKakaoId);
+                    log.setActorName(actorName);
+                    log.setTitle(title);
+                    log.setBody(body);
                     try {
-                        send(s, payload);
+                        int code = send(s, payload);
+                        log.setHttpCode(code);
+                        if (code == 404 || code == 410) {            // 만료/해지된 구독은 정리
+                            dao.deleteByEndpoint(s.getEndpoint());
+                            log.setResult("EXPIRED");
+                            logger.info("만료된 푸시 구독 삭제 sub={}", s.getSubId());
+                        } else if (code >= 200 && code < 300) {
+                            log.setResult("OK");
+                        } else {
+                            log.setResult("FAIL");
+                            log.setErrorMsg("HTTP " + code);
+                            logger.warn("푸시 응답 code={} sub={}", code, s.getSubId());
+                        }
                     } catch (Exception e) {
+                        log.setResult("FAIL");
+                        log.setErrorMsg(cut(e.getClass().getSimpleName() + ": " + e.getMessage(), 450));
                         logger.warn("푸시 발송 실패 sub={}", s.getSubId(), e);
                     }
+                    saveLog(log);
                 }
             }
         });
     }
 
-    private void send(PushSubDto s, String payload) throws Exception {
+    /** 이력 저장 실패가 발송 흐름에 영향을 주지 않도록 */
+    private void saveLog(PushLogDto log) {
+        try {
+            // DB 문자셋이 이모지(4바이트 문자)를 저장하지 못해 깨지므로 제거 후 저장 (한글은 정상)
+            log.setActorName(stripEmoji(log.getActorName()));
+            log.setTitle(stripEmoji(log.getTitle()));
+            log.setBody(stripEmoji(log.getBody()));
+            log.setErrorMsg(stripEmoji(log.getErrorMsg()));
+            dao.insertLog(log);
+        } catch (Exception e) {
+            logger.warn("푸시 이력 저장 실패", e);
+        }
+    }
+
+    /** 서로게이트 쌍(이모지 등)을 제거하고 앞뒤 공백 정리 */
+    private static String stripEmoji(String s) {
+        if (s == null) return null;
+        StringBuilder b = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); i++) {
+            char ch = s.charAt(i);
+            if (Character.isSurrogate(ch)) continue;
+            b.append(ch);
+        }
+        return b.toString().trim();
+    }
+
+    private static String cut(String s, int max) {
+        return s != null && s.length() > max ? s.substring(0, max) : s;
+    }
+
+    /** 푸시 서버로 전송하고 HTTP 응답 코드를 반환 */
+    private int send(PushSubDto s, String payload) throws Exception {
         ensureKeys();
         byte[] ua = WebPushCrypto.b64urlDecode(s.getP256dh());
         byte[] auth = WebPushCrypto.b64urlDecode(s.getAuth());
         byte[] body = WebPushCrypto.encrypt(payload.getBytes(StandardCharsets.UTF_8), ua, auth);
 
         HttpURLConnection c = (HttpURLConnection) new URL(s.getEndpoint()).openConnection();
-        c.setRequestMethod("POST");
-        c.setConnectTimeout(10000);
-        c.setReadTimeout(15000);
-        c.setDoOutput(true);
-        c.setRequestProperty("Content-Encoding", "aes128gcm");
-        c.setRequestProperty("Content-Type", "application/octet-stream");
-        c.setRequestProperty("TTL", "3600");
-        c.setRequestProperty("Urgency", "high");
-        c.setRequestProperty("Authorization", WebPushCrypto.vapidAuthHeader(s.getEndpoint(), subject(), priv, pub));
-        c.setFixedLengthStreamingMode(body.length);
-        OutputStream os = c.getOutputStream();
         try {
-            os.write(body);
+            c.setRequestMethod("POST");
+            c.setConnectTimeout(10000);
+            c.setReadTimeout(15000);
+            c.setDoOutput(true);
+            c.setRequestProperty("Content-Encoding", "aes128gcm");
+            c.setRequestProperty("Content-Type", "application/octet-stream");
+            c.setRequestProperty("TTL", "3600");
+            c.setRequestProperty("Urgency", "high");
+            c.setRequestProperty("Authorization", WebPushCrypto.vapidAuthHeader(s.getEndpoint(), subject(), priv, pub));
+            c.setFixedLengthStreamingMode(body.length);
+            OutputStream os = c.getOutputStream();
+            try {
+                os.write(body);
+            } finally {
+                os.close();
+            }
+            return c.getResponseCode();
         } finally {
-            os.close();
+            c.disconnect();
         }
-
-        int code = c.getResponseCode();
-        if (code == 404 || code == 410) {            // 만료/해지된 구독은 정리
-            dao.deleteByEndpoint(s.getEndpoint());
-            logger.info("만료된 푸시 구독 삭제 sub={}", s.getSubId());
-        } else if (code < 200 || code >= 300) {
-            logger.warn("푸시 응답 code={} sub={}", code, s.getSubId());
-        }
-        c.disconnect();
     }
 
     private static String json(String v) {
