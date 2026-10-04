@@ -573,7 +573,7 @@ document.addEventListener('visibilitychange', function() {
 /* ===== 삭제 ===== */
 function deleteRow(row) {
   if (row.id === 0 && isBlank(row)) return;
-  if (!confirm('삭제하시겠습니까?\n(숨김 처리되며 실제 삭제되지 않습니다)')) return;
+  if (!confirm('이 행을 삭제하시겠습니까?')) return;
   removeRow(row);
 }
 
@@ -597,6 +597,7 @@ function removeRow(row) {
     ensureBlankRow();
     renumber();
     updateTotals();
+    setStatus('saved', '삭제되었습니다', true);
   };
   var wait = row.promise || Promise.resolve();
   wait.then(function() {
