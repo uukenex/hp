@@ -46,6 +46,8 @@
   .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; background: #fff; border: 1px solid #dde3ed; border-radius: 12px; padding: 6px; }
   .dow { text-align: center; font-size: 11px; color: #888; padding: 4px 0; }
   .dow.sun, .day.sun .n { color: #c62828; }
+  .day.hol .n { color: #c62828 !important; }
+  .day .hn { font-size: 9px; color: #c62828; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .dow.sat, .day.sat .n { color: #1565c0; }
   .day { min-height: 52px; border-radius: 8px; padding: 3px 2px; text-align: center; cursor: pointer; border: 1px solid transparent; }
   .day.out { opacity: 0.35; }
@@ -187,6 +189,8 @@ var items = [];
 var upcoming = [];
 var viewYear = 0, viewMonth = 0;   // 달력 표시 월 (month: 1~12)
 var monthOcc = [];
+var monthHol = {};         // 해당 달력 구간의 공휴일 (날짜 → 이름)
+var todayHoliday = null;
 var selDate = null;
 var editing = null;        // 수정 중인 항목 (신규면 null)
 var formType = 'DDAY';
@@ -223,7 +227,8 @@ function dateIconSvg(m, d, size) {
 function paintToday() {
   var p = parse(today);
   document.getElementById('hdrIcon').innerHTML = dateIconSvg(p.m, p.d, 40);
-  document.getElementById('todayText').textContent = p.y + '년 ' + p.m + '월 ' + p.d + '일 ' + DOW[dowOf(today)] + '요일';
+  document.getElementById('todayText').textContent = p.y + '년 ' + p.m + '월 ' + p.d + '일 ' + DOW[dowOf(today)] + '요일' + (todayHoliday ? ' · ' + todayHoliday : '');
+  document.getElementById('todayText').style.color = (todayHoliday || dowOf(today) === 0) ? '#c62828' : '';
   // 파비콘도 오늘 날짜로
   try {
     var c = document.createElement('canvas'); c.width = 64; c.height = 64;
@@ -292,6 +297,7 @@ function loadMonth() {
   var to = ymd(end.getFullYear(), end.getMonth() + 1, end.getDate());
   return api('/calendar/api/occurrences?from=' + from + '&to=' + to).then(function(res) {
     monthOcc = res.list || [];
+    monthHol = res.holidays || {};
     renderMonth(start);
   }).catch(function() {});
 }
@@ -306,10 +312,15 @@ function renderMonth(start) {
     var d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
     var key = ymd(d.getFullYear(), d.getMonth() + 1, d.getDate());
     var cls = 'day' + (d.getMonth() + 1 !== viewMonth ? ' out' : '') + (key === today ? ' today' : '') + (key === selDate ? ' sel' : '')
-      + (d.getDay() === 0 ? ' sun' : d.getDay() === 6 ? ' sat' : '');
+      + (d.getDay() === 0 ? ' sun' : d.getDay() === 6 ? ' sat' : '') + (monthHol[key] ? ' hol' : '');
     var cell = el('div', cls);
     cell.dataset.date = key;
     cell.appendChild(el('div', 'n', String(d.getDate())));
+    if (monthHol[key]) {
+      var hn = monthHol[key];
+      if (hn.indexOf('대체공휴일') === 0) hn = '대체휴일';   // 칸이 좁아서 줄임 (전체 이름은 날짜를 누르면 표시)
+      cell.appendChild(el('div', 'hn', hn));
+    }
     var dots = el('div', 'dots');
     (byDate[key] || []).slice(0, 4).forEach(function(o) { dots.appendChild(el('span', 'dot' + (o.type === 'BIRTHDAY' ? ' bd' : ''))); });
     cell.appendChild(dots);
@@ -319,7 +330,8 @@ function renderMonth(start) {
   var box = document.getElementById('calDetail');
   box.innerHTML = '';
   if (selDate) {
-    box.appendChild(el('div', 's', niceDate(selDate)));
+    box.appendChild(el('div', 's', niceDate(selDate) + (monthHol[selDate] ? ' · ' + monthHol[selDate] : '')));
+    if (monthHol[selDate]) box.lastChild.style.color = '#c62828';
     var list = byDate[selDate] || [];
     if (!list.length) box.appendChild(el('div', 'empty', '이 날은 기념일이 없습니다.'));
     list.forEach(function(o) { box.appendChild(occCard(o)); });
@@ -437,6 +449,7 @@ function saveForm() {
 function reloadAll() {
   return Promise.all([api('/calendar/api/items'), api('/calendar/api/upcoming')]).then(function(r) {
     today = r[0].today;
+    todayHoliday = r[0].todayHoliday || null;
     items = r[0].items || [];
     upcoming = r[1].list || [];
     if (!viewYear) { var p = parse(today); viewYear = p.y; viewMonth = p.m; selDate = today; }

@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import my.prac.core.calendar.dto.CalItemDto;
 import my.prac.core.calendar.service.CalendarService;
+import my.prac.core.calendar.service.KoreanHolidays;
 import my.prac.core.calendar.service.CalendarService.Occurrence;
 import my.prac.core.car.dto.CarUserDto;
 import my.prac.core.car.push.CarPushService;
@@ -74,6 +75,7 @@ public class CalendarController {
         Map<String, Object> res = new HashMap<String, Object>();
         res.put("today", CalendarService.today().toString());
         res.put("items", calendarService.getItems(kakaoId(session)));
+        res.put("todayHoliday", KoreanHolidays.forYear(CalendarService.today().getYear()).get(CalendarService.today().toString()));
         return res;
     }
 
@@ -98,6 +100,7 @@ public class CalendarController {
             LocalDate f = LocalDate.parse(from), t = LocalDate.parse(to);
             if (t.isBefore(f) || f.plusDays(800).isBefore(t)) throw new IllegalArgumentException("range");
             res.put("list", calendarService.occurrences(calendarService.getItems(kakaoId(session)), f, t));
+            res.put("holidays", KoreanHolidays.range(f, t));
         } catch (Exception e) {
             res.put("list", new java.util.ArrayList<Occurrence>());
         }
