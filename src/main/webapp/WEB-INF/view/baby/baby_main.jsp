@@ -32,6 +32,7 @@
   .top .who { flex: 1; min-width: 0; }
   .top .nm { font-size: 17px; font-weight: 700; color: var(--accent); }
   .top .age { font-size: 12px; color: var(--sub); }
+  .top .me { display: inline-block; margin-top: 3px; font-size: 11px; font-weight: 700; color: var(--accent-text); background: var(--accent-soft); border-radius: 10px; padding: 2px 9px; }
   .top select { border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 5px 8px; font-size: 13px; }
   .bell { border: 1px solid var(--line); background: var(--card); border-radius: 16px; padding: 6px 10px; font-size: 13px; font-weight: 600; white-space: nowrap; }
   .bell.on { background: var(--accent-soft); border-color: var(--accent); }
@@ -142,6 +143,7 @@
   <div class="who">
     <div class="nm" id="babyName">아기 기록</div>
     <div class="age" id="babyAge"></div>
+    <div class="me" id="meBadge"></div>
   </div>
   <select id="babySel" style="display:none;"></select>
   <button type="button" id="bell" class="bell" style="display:none;" onclick="togglePush()">🔕 알림</button>
@@ -256,6 +258,8 @@ function paintHeader() {
   var b = state.baby;
   document.getElementById('babyName').textContent = b ? b.name : '아기 기록';
   document.getElementById('babyAge').textContent = b ? ageText(b.birthDate, state.today) : '';
+  var who = (b && b.relation ? b.relation + ' ' : '') + (state.meName ? '(' + state.meName + ')' : '');
+  document.getElementById('meBadge').textContent = who.trim() ? '👤 접속: ' + who.trim() : '';
   var sel = document.getElementById('babySel');
   sel.innerHTML = '';
   state.babies.forEach(function(x) { var o = document.createElement('option'); o.value = x.babyId; o.textContent = x.name; sel.appendChild(o); });
@@ -267,6 +271,7 @@ document.getElementById('babySel').addEventListener('change', function() { selec
 function selectBaby(id) {
   for (var i = 0; i < state.babies.length; i++) if (state.babies[i].babyId === id) state.baby = state.babies[i];
   try { localStorage.setItem('baby_sel', String(id)); } catch (e) {}
+  prefetchGrowth();
   paintHeader();
   state.date = state.today;
   showTab(state.tab);
@@ -381,22 +386,75 @@ function paintDay() {
 /* ===== 입력 시트 ===== */
 function closeSheet() { document.getElementById('sheetBg').classList.remove('show'); }
 
+/* 입력 위젯: 최대한 선택(칩/버튼/±)으로 입력하고, 글자 입력은 접어 둠 */
+function chipPick(options, initial, onPick, multi) {
+  var box = el('div', 'chips');
+  var sel = multi ? (initial || []).slice() : initial;
+  var buttons = [];
+  function paint() {
+    buttons.forEach(function(x) {
+      var on = multi ? sel.indexOf(x.v) >= 0 : sel === x.v;
+      x.b.classList.toggle('on', on);
+    });
+  }
+  options.forEach(function(o) {
+    var v = o[0], b = btn(o[1], '', function() {
+      if (multi) { var i = sel.indexOf(v); if (i >= 0) sel.splice(i, 1); else sel.push(v); }
+      else sel = (sel === v && o[2] === 'toggle') ? null : v;
+      paint(); if (onPick) onPick(sel);
+    });
+    buttons.push({ v: v, b: b }); box.appendChild(b);
+  });
+  paint();
+  box.get = function() { return sel; };
+  box.set = function(v) { sel = v; paint(); if (onPick) onPick(sel); };
+  return box;
+}
+
+function stepperInput(parent, label, init, step, presets, suffix) {
+  var wrap = el('div', 'field'); wrap.appendChild(el('label', 'l', label));
+  var st = el('div', 'stepper');
+  var inp = document.createElement('input'); inp.type = 'number'; inp.inputMode = 'decimal'; inp.step = String(step); inp.value = init == null ? '' : init;
+  function bump(d) {
+    var cur = parseFloat(inp.value); if (isNaN(cur)) cur = init == null ? 0 : init;
+    var v = Math.round((cur + d) * 100) / 100; if (v < 0) v = 0; inp.value = v;
+  }
+  st.appendChild(btn('−', '', function() { bump(-step); }));
+  st.appendChild(inp);
+  st.appendChild(btn('+', '', function() { bump(step); }));
+  wrap.appendChild(st);
+  if (presets && presets.length) {
+    var chips = el('div', 'chips');
+    presets.forEach(function(v) { chips.appendChild(btn(String(v) + (suffix || ''), '', function() { inp.value = v; })); });
+    wrap.appendChild(chips);
+  }
+  parent.appendChild(wrap);
+  return inp;
+}
+
+/* 메모는 기본적으로 접어 두고 필요할 때만 입력 */
+function memoToggle(parent, initial, label) {
+  var holder = el('div', 'field');
+  var inp = document.createElement('input'); inp.type = 'text'; inp.maxLength = 300; inp.value = initial || '';
+  var open = btn('＋ ' + (label || '메모 남기기'), 'btn ghost', null); open.style.cssText = 'padding:8px 12px;font-size:13px;';
+  inp.style.display = initial ? 'block' : 'none'; open.style.display = initial ? 'none' : 'inline-block';
+  open.addEventListener('click', function() { open.style.display = 'none'; inp.style.display = 'block'; inp.focus(); });
+  holder.appendChild(open); holder.appendChild(inp); parent.appendChild(holder);
+  return inp;
+}
+
 function openSheet(type, log) {
   var body = document.getElementById('sheetBody'); body.innerHTML = '';
   var editing = !!log;
   var open = state.summary && state.summary.status ? state.summary.status : {};
   // 수면: 자는 중이면 "깼어요"로 진행(진행 중인 수면 기록을 완성)
   var sleepWake = false;
-  if (type === 'SLEEP' && !editing && open.sleeping) {
-    sleepWake = true;
-    log = null; editing = false;
-  }
+  if (type === 'SLEEP' && !editing && open.sleeping) { sleepWake = true; }
   document.getElementById('sheetTitle').textContent = TYPES[type].ic + ' ' + TYPES[type].name + (editing ? ' 수정' : sleepWake ? ' · 깼어요' : ' 기록');
 
   var f = { startAt: log ? fromServer(log.startAt) : nowLocalInput(), endAt: log && log.endAt ? fromServer(log.endAt) : '' };
   var err = el('div', 'err');
 
-  // 시간 입력 + 빠른 조정
   function timeField(label, key, withQuick) {
     var wrap = el('div', 'field');
     wrap.appendChild(el('label', 'l', label));
@@ -405,7 +463,7 @@ function openSheet(type, log) {
     wrap.appendChild(inp);
     if (withQuick) {
       var chips = el('div', 'chips');
-      [['지금', 0], ['10분 전', 10], ['30분 전', 30], ['1시간 전', 60]].forEach(function(q) {
+      [['지금', 0], ['10분 전', 10], ['30분 전', 30], ['1시간 전', 60], ['2시간 전', 120]].forEach(function(q) {
         chips.appendChild(btn(q[0], '', function() { inp.value = toInput(new Date(Date.now() - q[1] * 60000)); f[key] = inp.value; }));
       });
       wrap.appendChild(chips);
@@ -413,49 +471,27 @@ function openSheet(type, log) {
     body.appendChild(wrap);
     return inp;
   }
-  function memoField(label, ph) {
-    var wrap = el('div', 'field'); wrap.appendChild(el('label', 'l', label));
-    var m = document.createElement('input'); m.type = 'text'; m.maxLength = 300; m.placeholder = ph || ''; m.value = log && log.memo ? log.memo : '';
-    wrap.appendChild(m); body.appendChild(wrap); return m;
-  }
-  function numField(label, val, step, ph) {
-    var wrap = el('div', 'field'); wrap.appendChild(el('label', 'l', label));
-    var i = document.createElement('input'); i.type = 'number'; i.step = step; i.inputMode = 'decimal'; i.placeholder = ph || ''; i.value = val == null ? '' : val;
-    wrap.appendChild(i); body.appendChild(wrap); return i;
-  }
   function num(i) { var v = parseFloat(i.value); return isNaN(v) ? null : v; }
+  function labelBox(text) { var w = el('div', 'field'); w.appendChild(el('label', 'l', text)); body.appendChild(w); return w; }
 
-  var collect = null;   // 저장 시 값 수집 함수
+  var collect = null;
 
   if (type === 'FORMULA') {
     timeField('먹인 시간', 'startAt', true);
     var def = 120;
     for (var k = state.logs.length - 1; k >= 0; k--) if (state.logs[k].logType === 'FORMULA' && state.logs[k].ml) { def = state.logs[k].ml; break; }
-    var wrap = el('div', 'field'); wrap.appendChild(el('label', 'l', '분유량 (ml)'));
-    var st = el('div', 'stepper');
-    var ml = document.createElement('input'); ml.type = 'number'; ml.inputMode = 'decimal'; ml.step = '5'; ml.value = log ? log.ml : def;
-    st.appendChild(btn('−', '', function() { ml.value = Math.max(0, (parseFloat(ml.value) || 0) - 10); }));
-    st.appendChild(ml);
-    st.appendChild(btn('+', '', function() { ml.value = (parseFloat(ml.value) || 0) + 10; }));
-    wrap.appendChild(st);
-    var chips = el('div', 'chips');
-    [60, 80, 100, 120, 140, 160, 180, 200].forEach(function(v) { chips.appendChild(btn(String(v), '', function() { ml.value = v; })); });
-    wrap.appendChild(chips); body.appendChild(wrap);
-    var memo = memoField('메모 (선택)');
+    var ml = stepperInput(body, '분유량 (ml)', log ? log.ml : def, 10, [60, 80, 100, 120, 140, 160, 180, 200], '');
+    var memo = memoToggle(body, log ? log.memo : '');
     collect = function() { return { ml: num(ml), memo: memo.value }; };
   } else if (type === 'BREAST') {
     timeField('시작 시간', 'startAt', true);
     var side = log ? log.detail : 'L';
-    var wrapS = el('div', 'field'); wrapS.appendChild(el('label', 'l', '수유한 쪽'));
-    var seg = el('div', 'seg');
-    [['L', '왼쪽'], ['R', '오른쪽'], ['B', '양쪽']].forEach(function(o) {
-      var b = btn(o[1], side === o[0] ? 'on' : '', function() { side = o[0]; Array.prototype.forEach.call(seg.children, function(c) { c.classList.remove('on'); }); b.classList.add('on'); });
-      seg.appendChild(b);
-    });
-    wrapS.appendChild(seg); body.appendChild(wrapS);
+    var sideBox = labelBox('수유한 쪽');
+    var sideSeg = chipPick([['L', '왼쪽'], ['R', '오른쪽'], ['B', '양쪽']], side, function(v) { side = v; });
+    sideSeg.className = 'seg'; sideBox.appendChild(sideSeg);
     var minutes = log && log.endAt ? Math.round((new Date(fromServer(log.endAt)) - new Date(fromServer(log.startAt))) / 60000) : 10;
-    var mi = numField('수유 시간 (분)', minutes, '1', '10');
-    var memoB = memoField('메모 (선택)');
+    var mi = stepperInput(body, '수유 시간 (분)', minutes, 5, [5, 10, 15, 20, 25, 30], '분');
+    var memoB = memoToggle(body, log ? log.memo : '');
     collect = function() {
       var m = num(mi) || 0;
       var end = m > 0 && f.startAt ? toInput(new Date(new Date(f.startAt).getTime() + m * 60000)) : '';
@@ -463,19 +499,27 @@ function openSheet(type, log) {
     };
   } else if (type === 'SOLID') {
     timeField('먹인 시간', 'startAt', true);
-    var amt = numField('먹은 양 (g 또는 ml, 선택)', log ? log.ml : '', '1', '50');
-    var food = memoField('음식 (선택)', '예) 당근죽');
-    collect = function() { return { ml: num(amt), memo: food.value }; };
+    var amt = stepperInput(body, '먹은 양 (g 또는 ml)', log && log.ml ? log.ml : 50, 10, [30, 50, 80, 100, 150, 200], '');
+    var foods = ['쌀미음', '쌀죽', '채소죽', '소고기죽', '닭죽', '과일', '간식'];
+    var cur = log && log.memo ? log.memo.split(', ') : [];
+    var picked = cur.filter(function(x) { return foods.indexOf(x) >= 0; });
+    var extra = cur.filter(function(x) { return foods.indexOf(x) < 0; }).join(', ');
+    var foodBox = labelBox('먹인 음식 (여러 개 선택 가능)');
+    var foodChips = chipPick(foods.map(function(x) { return [x, x]; }), picked, null, true); foodBox.appendChild(foodChips);
+    var memoS = memoToggle(body, extra, '직접 입력');
+    collect = function() {
+      var parts = foodChips.get().slice(); if (memoS.value.trim()) parts.push(memoS.value.trim());
+      return { ml: num(amt), memo: parts.join(', ') };
+    };
   } else if (type === 'SLEEP') {
     if (sleepWake) {
-      // 진행 중인 수면을 마무리: 시작은 서버 기록, 끝 시간만 입력
       f.startAt = fromServer(open.sleepStartAt);
       body.appendChild(el('div', 'muted', hm(open.sleepStartAt) + '에 잠들었어요. 깬 시간을 확인해 주세요.'));
       f.endAt = nowLocalInput();
       timeField('깬 시간', 'endAt', true);
       collect = function() { return { _wake: true }; };
     } else {
-      timeField(editing ? '잠든 시간' : '잠든 시간', 'startAt', true);
+      timeField('잠든 시간', 'startAt', true);
       var endWrap = timeField('깬 시간 (비워 두면 자는 중)', 'endAt', false);
       if (!editing) {
         var chipsE = el('div', 'chips'); chipsE.appendChild(btn('지금 깼어요', '', function() { endWrap.value = nowLocalInput(); f.endAt = endWrap.value; }));
@@ -485,31 +529,44 @@ function openSheet(type, log) {
     }
   } else if (type === 'DIAPER') {
     timeField('시간', 'startAt', true);
+    var conds = ['정상', '묽음', '단단함', '노란색', '녹색', '갈색'];
+    var curD = log && log.memo ? log.memo.split(', ') : [];
+    var condBox = labelBox('상태 (선택, 여러 개 가능)');
+    var condChips = chipPick(conds.map(function(x) { return [x, x]; }), curD.filter(function(x) { return conds.indexOf(x) >= 0; }), null, true); condBox.appendChild(condChips);
+    var tBox = labelBox(editing ? '종류를 누르면 바로 저장됩니다' : '종류를 누르면 바로 저장됩니다');
     var big = el('div', 'big3');
-    [['PEE', '소변'], ['POOP', '대변'], ['BOTH', '둘 다']].forEach(function(o) {
-      big.appendChild(btn(o[1], '', function() { doSave({ detail: o[0], memo: memoD.value }); }));
+    [['PEE', '💧 소변'], ['POOP', '💩 대변'], ['BOTH', '둘 다']].forEach(function(o) {
+      big.appendChild(btn(o[1], '', function() { doSave({ detail: o[0], memo: condChips.get().join(', ') }); }));
     });
-    body.appendChild(big);
-    var memoD = memoField('메모 (선택)', '예) 묽음, 노란색');
-    body.appendChild(el('div', 'muted', editing ? '종류를 누르면 바로 저장됩니다.' : '종류를 누르면 바로 저장됩니다.'));
+    tBox.appendChild(big);
     collect = null;
   } else if (type === 'GROWTH') {
     timeField('측정 시간', 'startAt', false);
-    var last = null;
-    var w = numField('체중 (kg)', log ? log.weightKg : '', '0.01', '예) 5.20');
-    var h = numField('키 (cm)', log ? log.heightCm : '', '0.1', '예) 60.5');
-    var hd = numField('머리둘레 (cm)', log ? log.headCm : '', '0.1', '예) 40.2');
-    var memoG = memoField('메모 (선택)');
+    var lg = state.lastGrowth || {};
+    var w = stepperInput(body, '체중 (kg)', log ? log.weightKg : (lg.weightKg != null ? lg.weightKg : 3.5), 0.1, null);
+    var h = stepperInput(body, '키 (cm)', log ? log.heightCm : (lg.heightCm != null ? lg.heightCm : 50), 0.5, null);
+    var hd = stepperInput(body, '머리둘레 (cm)', log ? log.headCm : (lg.headCm != null ? lg.headCm : 34), 0.5, null);
+    body.appendChild(el('div', 'muted', '바뀐 값만 ＋/－로 맞춰 주세요. 지난 기록 값에서 시작합니다.'));
+    var memoG = memoToggle(body, log ? log.memo : '');
     collect = function() { return { weightKg: num(w), heightCm: num(h), headCm: num(hd), memo: memoG.value }; };
   } else if (type === 'TEMP') {
     timeField('측정 시간', 'startAt', true);
-    var tp = numField('체온 (℃)', log ? log.tempC : '', '0.1', '예) 36.8');
-    var memoT = memoField('메모 (선택)');
+    var tp = stepperInput(body, '체온 (℃)', log ? log.tempC : 36.8, 0.1, [36.5, 36.8, 37.0, 37.5, 38.0, 38.5, 39.0], '');
+    var memoT = memoToggle(body, log ? log.memo : '');
     collect = function() { return { tempC: num(tp), memo: memoT.value }; };
   } else if (type === 'MEDICINE') {
     timeField('먹인 시간', 'startAt', true);
-    var med = memoField('약 이름', '예) 해열제 2.5ml');
-    collect = function() { return { memo: med.value }; };
+    var meds = ['해열제(아세트아미노펜)', '해열제(이부프로펜)', '유산균', '비타민D', '감기약', '기타'];
+    var medBox = labelBox('약 종류');
+    var curM = log && log.memo ? log.memo : '';
+    var pickedM = null, typed = '';
+    meds.forEach(function(x) { if (curM === x) pickedM = x; });
+    if (!pickedM && curM) { pickedM = '기타'; typed = curM; }
+    var medText = document.createElement('input'); medText.type = 'text'; medText.maxLength = 100; medText.placeholder = '약 이름 입력'; medText.value = typed;
+    medText.style.cssText = 'margin-top:8px;display:' + (pickedM === '기타' ? 'block' : 'none') + ';';
+    var medChips = chipPick(meds.map(function(x) { return [x, x]; }), pickedM, function(v) { medText.style.display = v === '기타' ? 'block' : 'none'; if (v === '기타') medText.focus(); });
+    medBox.appendChild(medChips); medBox.appendChild(medText);
+    collect = function() { var v = medChips.get(); return { memo: v === '기타' ? medText.value : (v || '') }; };
   }
 
   body.appendChild(err);
@@ -527,33 +584,32 @@ function openSheet(type, log) {
     showLoading();
     post('/baby/api/log/save', rec).then(function() {
       closeSheet(); toast('저장했습니다.');
-      return loadDay().then(function() { if (state.tab === 'stats') loadStats(); if (state.tab === 'growth') loadGrowth(); });
+      return loadDay().then(function() { if (state.tab === 'stats') loadStats(); if (state.tab === 'growth') loadGrowth(); prefetchGrowth(); });
     }).catch(function(e) { err.textContent = e.message && e.message.indexOf('http') !== 0 ? e.message : '저장에 실패했습니다.'; }).then(hideLoading);
   }
-
-  if (collect) {
-    var btns = el('div', 'btns');
-    if (editing) btns.appendChild(btn('삭제', 'btn danger', function() {
-      if (!confirm('이 기록을 삭제할까요?')) return;
-      showLoading();
-      post('/baby/api/log/delete', { babyId: state.baby.babyId, logId: log.logId }).then(function() { closeSheet(); toast('삭제했습니다.'); return loadDay(); })
-        .catch(function() { toast('삭제에 실패했습니다.'); }).then(hideLoading);
-    }));
-    btns.appendChild(btn('취소', 'btn ghost', closeSheet));
-    btns.appendChild(btn('저장', 'btn primary', function() { doSave(collect()); }));
-    body.appendChild(btns);
-  } else if (editing) {   // 기저귀 수정: 삭제 버튼만 추가
-    var b2 = el('div', 'btns');
-    b2.appendChild(btn('삭제', 'btn danger', function() {
-      if (!confirm('이 기록을 삭제할까요?')) return;
-      showLoading();
-      post('/baby/api/log/delete', { babyId: state.baby.babyId, logId: log.logId }).then(function() { closeSheet(); toast('삭제했습니다.'); return loadDay(); })
-        .catch(function() { toast('삭제에 실패했습니다.'); }).then(hideLoading);
-    }));
-    b2.appendChild(btn('취소', 'btn ghost', closeSheet));
-    body.appendChild(b2);
+  function doDelete() {
+    if (!confirm('이 기록을 삭제할까요?')) return;
+    showLoading();
+    post('/baby/api/log/delete', { babyId: state.baby.babyId, logId: log.logId }).then(function() { closeSheet(); toast('삭제했습니다.'); return loadDay(); })
+      .catch(function() { toast('삭제에 실패했습니다.'); }).then(hideLoading);
   }
+
+  var btns = el('div', 'btns');
+  if (editing) btns.appendChild(btn('삭제', 'btn danger', doDelete));
+  btns.appendChild(btn('취소', 'btn ghost', closeSheet));
+  if (collect) btns.appendChild(btn('저장', 'btn primary', function() { doSave(collect()); }));
+  body.appendChild(btns);
   document.getElementById('sheetBg').classList.add('show');
+}
+
+/* 성장 기록 입력 시 지난 값에서 시작하도록 미리 불러 둠 */
+function prefetchGrowth() {
+  if (!state.baby) return;
+  api('/baby/api/growth?babyId=' + state.baby.babyId).then(function(list) {
+    var last = {};
+    list.forEach(function(l) { ['weightKg', 'heightCm', 'headCm'].forEach(function(k) { if (l[k] != null) last[k] = l[k]; }); });
+    state.lastGrowth = last;
+  }).catch(function() {});
 }
 
 /* ===== 통계 탭 ===== */
@@ -684,8 +740,10 @@ function renderSettings() {
   var rl = document.createElement('input'); rl.type = 'text'; rl.maxLength = 20; rl.value = b.relation || ''; rl.placeholder = '예) 엄마, 아빠';
   field(c3, '나의 호칭 (기록에 표시돼요)', rl);
   function check(label, checked) { var l = el('label'); l.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:14px;'; var i = document.createElement('input'); i.type = 'checkbox'; i.checked = checked; i.style.cssText = 'width:20px;height:20px;accent-color:#D4537E;'; l.appendChild(i); l.appendChild(document.createTextNode(label)); c3.appendChild(l); return i; }
-  var na = check('다른 보호자가 수유/수면을 기록하면 알림 받기', b.notifyActivity === 'Y');
+  var na = check('다른 보호자가 무언가 기록하면 알림 받기', b.notifyActivity === 'Y');
   var nr = check('수유 간격 알림 받기', b.notifyRemind === 'Y');
+  var wk = check('화면 항상 켜두기 (냉장고에 두고 쓸 때)', wakeWanted());
+  wk.addEventListener('change', function() { try { localStorage.setItem('baby_awake', wk.checked ? '1' : '0'); } catch (e) {} applyWakeLock(); toast(wk.checked ? '화면이 꺼지지 않게 합니다.' : '화면 항상 켜두기를 껐습니다.'); });
   c3.appendChild(btn('저장', 'btn primary wide', function() {
     post('/baby/api/member/update', { babyId: b.babyId, relation: rl.value, notifyActivity: na.checked ? 'Y' : 'N', notifyRemind: nr.checked ? 'Y' : 'N' })
       .then(function() { toast('저장했습니다.'); return reloadBabies(); }).catch(function(e) { toast(e.message); });
@@ -745,7 +803,7 @@ function showOnboard(canCancel) {
 /* ===== 시작 ===== */
 function reloadBabies() {
   return api('/baby/api/babies').then(function(r) {
-    state.today = r.today; state.babies = r.babies || [];
+    state.today = r.today; state.babies = r.babies || []; state.meName = r.meName || '';
     if (!state.date) state.date = state.today;
     if (!state.babies.length) {
       state.baby = null; paintHeader(); showOnboard(false); return;
@@ -754,6 +812,7 @@ function reloadBabies() {
     var found = null;
     state.babies.forEach(function(x) { if (x.babyId === want) found = x; });
     state.baby = found || state.babies[0];
+    prefetchGrowth();
     document.getElementById('onboard').style.display = 'none';
     document.getElementById('main').style.display = 'block';
     paintHeader();
@@ -810,6 +869,25 @@ function togglePush() {
     });
   }).catch(function() { alert('알림 설정에 실패했습니다. (HTTPS 접속인지 확인해 주세요)'); });
 }
+
+/* ===== 냉장고에 두고 쓸 때: 자동 새로고침 / 화면 켜두기 ===== */
+var wakeLock = null;
+function wakeWanted() { try { return localStorage.getItem('baby_awake') === '1'; } catch (e) { return false; } }
+function applyWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  if (!wakeWanted()) { if (wakeLock) { wakeLock.release(); wakeLock = null; } return; }
+  if (wakeLock || document.hidden) return;
+  navigator.wakeLock.request('screen').then(function(l) { wakeLock = l; l.addEventListener('release', function() { wakeLock = null; }); }).catch(function() {});
+}
+// 1분마다: 날짜가 바뀌었으면 오늘로 갱신, 아니면 다른 보호자의 기록을 반영 (입력창이 열려 있으면 건너뜀)
+setInterval(function() {
+  if (document.hidden || !state.baby) return;
+  if (document.getElementById('sheetBg').classList.contains('show')) return;
+  if (ymd(new Date()) !== state.today) { reloadBabies(); return; }
+  if (state.tab === 'today') loadDay();
+}, 60000);
+document.addEventListener('visibilitychange', applyWakeLock);
+applyWakeLock();
 
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeSheet(); });
 // 화면으로 돌아왔을 때 다른 보호자의 기록을 반영

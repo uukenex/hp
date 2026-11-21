@@ -69,6 +69,8 @@ public class BabyController {
         Map<String, Object> res = new HashMap<String, Object>();
         res.put("today", LocalDate.now(BabyService.ZONE).toString());
         res.put("babies", babyService.myBabies(kakaoId(session)));
+        Object u = session.getAttribute("carUser");
+        res.put("meName", (u instanceof CarUserDto && ((CarUserDto) u).getNickname() != null) ? ((CarUserDto) u).getNickname() : "");
         return res;
     }
 

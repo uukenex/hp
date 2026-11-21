@@ -396,7 +396,9 @@ public class BabyService {
                 else if ("SOLID".equals(type)) text = "이유식을 먹였어요 (" + t + ")";
                 else if ("TEMP".equals(type)) text = "체온 " + trimNum(d.getTempC()) + "℃를 기록했어요";
                 else if ("MEDICINE".equals(type)) text = "투약을 기록했어요 (" + d.getMemo() + ")";
-                else return;   // 기저귀, 성장은 알리지 않음 (너무 잦음)
+                else if ("DIAPER".equals(type)) text = ("PEE".equals(d.getDetail()) ? "소변" : "POOP".equals(d.getDetail()) ? "대변" : "소변·대변") + " 기저귀를 갈았어요 (" + t + ")";
+                else if ("GROWTH".equals(type)) text = "성장을 기록했어요 (" + growthText(d) + ")";
+                else return;
             }
             BabyDto baby = dao.getBaby(d.getBabyId());
             if (baby == null) return;
@@ -448,6 +450,14 @@ public class BabyService {
         if (min < 60) return min + "분";
         long h = min / 60, r = min % 60;
         return r == 0 ? h + "시간" : h + "시간 " + r + "분";
+    }
+
+    private static String growthText(BabyLogDto d) {
+        List<String> p = new ArrayList<String>();
+        if (d.getWeightKg() != null) p.add("체중 " + trimNum(d.getWeightKg()) + "kg");
+        if (d.getHeightCm() != null) p.add("키 " + trimNum(d.getHeightCm()) + "cm");
+        if (d.getHeadCm() != null) p.add("머리 " + trimNum(d.getHeadCm()) + "cm");
+        return String.join(", ", p);
     }
 
     private static String sideText(String d) {
