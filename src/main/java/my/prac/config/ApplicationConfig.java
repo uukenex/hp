@@ -25,9 +25,9 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
-@MapperScan({ "my.prac.core.car.dao", "my.prac.core.calendar.dao" })
+@MapperScan({ "my.prac.core.car.dao", "my.prac.core.calendar.dao", "my.prac.core.baby.dao" })
 @PropertySource("classpath:/safety/keys.properties")
-@ComponentScan(basePackages = { "my.prac.api", "my.prac.core.car", "my.prac.core.calendar" },
+@ComponentScan(basePackages = { "my.prac.api", "my.prac.core.car", "my.prac.core.calendar", "my.prac.core.baby" },
     excludeFilters = @Filter(type = FilterType.ANNOTATION, classes = Controller.class))
 @Import({ TransactionConfig.class })
 @EnableTransactionManagement

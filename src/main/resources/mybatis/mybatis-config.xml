@@ -15,6 +15,7 @@
 		<mapper resource="mybatis/mapper2.0/CarTransportMapper.xml" />
 		<mapper resource="mybatis/mapper2.0/CarPushMapper.xml" />
 		<mapper resource="mybatis/mapper2.0/CalendarMapper.xml" />
+		<mapper resource="mybatis/mapper2.0/BabyMapper.xml" />
 	</mappers>
 
 </configuration>

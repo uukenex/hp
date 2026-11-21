@@ -18,7 +18,7 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
 import my.prac.core.car.service.TuserKakaoService;
 
 @Configuration
-@ComponentScan({ "my.prac.api.wedding.controller", "my.prac.api.car.controller", "my.prac.api.calendar.controller" })
+@ComponentScan({ "my.prac.api.wedding.controller", "my.prac.api.car.controller", "my.prac.api.calendar.controller", "my.prac.api.baby.controller" })
 @EnableWebMvc
 @PropertySource("classpath:/safety/keys.properties")
 public class MvcConfig extends WebMvcConfigurerAdapter {
@@ -92,6 +92,8 @@ public class MvcConfig extends WebMvcConfigurerAdapter {
 				.excludePathPatterns("/transport/manifest.json", "/transport/sw.js", "/transport/icon/**");
 		registry.addInterceptor(new CarSessionInterceptor(tuserKakaoService)).addPathPatterns("/calendar/**")
 				.excludePathPatterns("/calendar/manifest.json", "/calendar/sw.js", "/calendar/icon/**");
+		registry.addInterceptor(new CarSessionInterceptor(tuserKakaoService)).addPathPatterns("/baby/**")
+				.excludePathPatterns("/baby/manifest.json", "/baby/sw.js", "/baby/icon/**");
 	}
 
 }

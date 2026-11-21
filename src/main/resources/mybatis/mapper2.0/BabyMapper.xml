@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.prac.core.baby.dao.BabyDAO">
+
+    <!-- ==================== 아기 ==================== -->
+
+    <select id="getBabiesByMember" resultType="my.prac.core.baby.dto.BabyDto">
+        SELECT B.BABY_ID, B.NAME, TO_CHAR(B.BIRTH_DATE, 'YYYY-MM-DD') AS BIRTH_DATE, B.GENDER,
+               B.FEED_REMIND_HOURS, B.LAST_REMIND_LOG_ID, B.CREATED_BY,
+               M.RELATION, M.IS_OWNER, M.NOTIFY_ACTIVITY, M.NOTIFY_REMIND
+        FROM TBABY_BABY B
+        JOIN TBABY_MEMBER M ON M.BABY_ID = B.BABY_ID
+        WHERE M.KAKAO_ID = #{kakaoId} AND B.IS_HIDDEN = 0
+        ORDER BY B.BABY_ID
+    </select>
+
+    <select id="getBaby" resultType="my.prac.core.baby.dto.BabyDto">
+        SELECT BABY_ID, NAME, TO_CHAR(BIRTH_DATE, 'YYYY-MM-DD') AS BIRTH_DATE, GENDER,
+               FEED_REMIND_HOURS, LAST_REMIND_LOG_ID, CREATED_BY
+        FROM TBABY_BABY
+        WHERE BABY_ID = #{babyId} AND IS_HIDDEN = 0
+    </select>
+
+    <insert id="insertBaby" parameterType="my.prac.core.baby.dto.BabyDto">
+        <selectKey keyProperty="babyId" resultType="int" order="BEFORE">
+            SELECT TBABY_BABY_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO TBABY_BABY (BABY_ID, NAME, BIRTH_DATE, GENDER, FEED_REMIND_HOURS, CREATED_BY, CREATED_AT, IS_HIDDEN)
+        VALUES (#{babyId}, #{name}, TO_DATE(#{birthDate}, 'YYYY-MM-DD'), #{gender, jdbcType=VARCHAR},
+                #{feedRemindHours}, #{createdBy}, SYSDATE, 0)
+    </insert>
+
+    <update id="updateBaby" parameterType="my.prac.core.baby.dto.BabyDto">
+        UPDATE TBABY_BABY SET
+            NAME              = #{name},
+            BIRTH_DATE        = TO_DATE(#{birthDate}, 'YYYY-MM-DD'),
+            GENDER            = #{gender, jdbcType=VARCHAR},
+            FEED_REMIND_HOURS = #{feedRemindHours}
+        WHERE BABY_ID = #{babyId} AND IS_HIDDEN = 0
+    </update>
+
+    <update id="hideBaby">
+        UPDATE TBABY_BABY SET IS_HIDDEN = 1 WHERE BABY_ID = #{babyId}
+    </update>
+
+    <select id="getRemindBabies" resultType="my.prac.core.baby.dto.BabyDto">
+        SELECT BABY_ID, NAME, TO_CHAR(BIRTH_DATE, 'YYYY-MM-DD') AS BIRTH_DATE, GENDER,
+               FEED_REMIND_HOURS, LAST_REMIND_LOG_ID, CREATED_BY
+        FROM TBABY_BABY
+        WHERE FEED_REMIND_HOURS > 0 AND IS_HIDDEN = 0
+    </select>
+
+    <update id="updateLastRemind">
+        UPDATE TBABY_BABY SET LAST_REMIND_LOG_ID = #{logId} WHERE BABY_ID = #{babyId}
+    </update>
+
+    <!-- ==================== 보호자 ==================== -->
+
+    <insert id="insertMember">
+        INSERT INTO TBABY_MEMBER (BABY_ID, KAKAO_ID, RELATION, NOTIFY_ACTIVITY, NOTIFY_REMIND, IS_OWNER, JOINED_AT)
+        VALUES (#{babyId}, #{kakaoId}, #{relation, jdbcType=VARCHAR}, 'Y', 'Y', #{isOwner}, SYSDATE)
+    </insert>
+
+    <select id="getMember" resultType="my.prac.core.baby.dto.BabyMemberDto">
+        SELECT M.BABY_ID, M.KAKAO_ID, U.NICKNAME, M.RELATION, M.NOTIFY_ACTIVITY, M.NOTIFY_REMIND, M.IS_OWNER
+        FROM TBABY_MEMBER M
+        LEFT JOIN TCAR_USER_KAKAO U ON U.KAKAO_ID = M.KAKAO_ID
+        WHERE M.BABY_ID = #{babyId} AND M.KAKAO_ID = #{kakaoId}
+    </select>
+
+    <select id="getMembers" resultType="my.prac.core.baby.dto.BabyMemberDto">
+        SELECT M.BABY_ID, M.KAKAO_ID, U.NICKNAME, M.RELATION, M.NOTIFY_ACTIVITY, M.NOTIFY_REMIND, M.IS_OWNER
+        FROM TBABY_MEMBER M
+        LEFT JOIN TCAR_USER_KAKAO U ON U.KAKAO_ID = M.KAKAO_ID
+        WHERE M.BABY_ID = #{babyId}
+        ORDER BY M.IS_OWNER DESC, M.JOINED_AT
+    </select>
+
+    <update id="updateMember">
+        UPDATE TBABY_MEMBER SET
+            RELATION        = #{relation, jdbcType=VARCHAR},
+            NOTIFY_ACTIVITY = #{notifyActivity},
+            NOTIFY_REMIND   = #{notifyRemind}
+        WHERE BABY_ID = #{babyId} AND KAKAO_ID = #{kakaoId}
+    </update>
+
+    <delete id="deleteMember">
+        DELETE FROM TBABY_MEMBER WHERE BABY_ID = #{babyId} AND KAKAO_ID = #{kakaoId}
+    </delete>
+
+    <!-- ==================== 초대 코드 ==================== -->
+
+    <insert id="insertInvite">
+        INSERT INTO TBABY_INVITE (CODE, BABY_ID, CREATED_BY, EXPIRES_AT)
+        VALUES (#{code}, #{babyId}, #{createdBy}, SYSDATE + #{hours} / 24)
+    </insert>
+
+    <select id="getInviteBabyId" resultType="java.lang.Integer">
+        SELECT BABY_ID FROM TBABY_INVITE
+        WHERE CODE = #{code} AND USED_AT IS NULL AND EXPIRES_AT > SYSDATE
+    </select>
+
+    <update id="useInvite">
+        UPDATE TBABY_INVITE SET USED_BY = #{kakaoId}, USED_AT = SYSDATE
+        WHERE CODE = #{code} AND USED_AT IS NULL AND EXPIRES_AT > SYSDATE
+    </update>
+
+    <!-- ==================== 기록 ==================== -->
+
+    <sql id="logCols">
+        L.LOG_ID, L.BABY_ID, L.LOG_TYPE,
+        TO_CHAR(L.START_AT, 'YYYY-MM-DD HH24:MI') AS START_AT,
+        TO_CHAR(L.END_AT, 'YYYY-MM-DD HH24:MI') AS END_AT,
+        L.ML, L.DETAIL, L.WEIGHT_KG, L.HEIGHT_CM, L.HEAD_CM, L.TEMP_C, L.MEMO, L.CREATED_BY,
+        NVL(M.RELATION, U.NICKNAME) AS CREATED_BY_NAME
+    </sql>
+
+    <sql id="logJoins">
+        FROM TBABY_LOG L
+        LEFT JOIN TBABY_MEMBER M ON M.BABY_ID = L.BABY_ID AND M.KAKAO_ID = L.CREATED_BY
+        LEFT JOIN TCAR_USER_KAKAO U ON U.KAKAO_ID = L.CREATED_BY
+    </sql>
+
+    <select id="getLogsRange" resultType="my.prac.core.baby.dto.BabyLogDto">
+        SELECT <include refid="logCols"/>
+        <include refid="logJoins"/>
+        WHERE L.BABY_ID = #{babyId} AND L.IS_HIDDEN = 0
+          AND L.START_AT &lt; TO_DATE(#{to}, 'YYYY-MM-DD HH24:MI')
+          AND ( NVL(L.END_AT, L.START_AT) &gt;= TO_DATE(#{from}, 'YYYY-MM-DD HH24:MI')
+                OR (L.LOG_TYPE = 'SLEEP' AND L.END_AT IS NULL) )
+        ORDER BY L.START_AT, L.LOG_ID
+    </select>
+
+    <select id="getLog" resultType="my.prac.core.baby.dto.BabyLogDto">
+        SELECT <include refid="logCols"/>
+        <include refid="logJoins"/>
+        WHERE L.LOG_ID = #{logId} AND L.IS_HIDDEN = 0
+    </select>
+
+    <select id="getLastFeed" resultType="my.prac.core.baby.dto.BabyLogDto">
+        SELECT * FROM (
+            SELECT <include refid="logCols"/>
+            <include refid="logJoins"/>
+            WHERE L.BABY_ID = #{babyId} AND L.IS_HIDDEN = 0 AND L.LOG_TYPE IN ('FORMULA', 'BREAST')
+            ORDER BY L.START_AT DESC, L.LOG_ID DESC
+        ) WHERE ROWNUM = 1
+    </select>
+
+    <select id="getOpenSleep" resultType="my.prac.core.baby.dto.BabyLogDto">
+        SELECT * FROM (
+            SELECT <include refid="logCols"/>
+            <include refid="logJoins"/>
+            WHERE L.BABY_ID = #{babyId} AND L.IS_HIDDEN = 0 AND L.LOG_TYPE = 'SLEEP' AND L.END_AT IS NULL
+            ORDER BY L.START_AT DESC
+        ) WHERE ROWNUM = 1
+    </select>
+
+    <select id="getLastSleepEnd" resultType="my.prac.core.baby.dto.BabyLogDto">
+        SELECT * FROM (
+            SELECT <include refid="logCols"/>
+            <include refid="logJoins"/>
+            WHERE L.BABY_ID = #{babyId} AND L.IS_HIDDEN = 0 AND L.LOG_TYPE = 'SLEEP' AND L.END_AT IS NOT NULL
+            ORDER BY L.END_AT DESC
+        ) WHERE ROWNUM = 1
+    </select>
+
+    <select id="getGrowthLogs" resultType="my.prac.core.baby.dto.BabyLogDto">
+        SELECT <include refid="logCols"/>
+        <include refid="logJoins"/>
+        WHERE L.BABY_ID = #{babyId} AND L.IS_HIDDEN = 0 AND L.LOG_TYPE = 'GROWTH'
+        ORDER BY L.START_AT, L.LOG_ID
+    </select>
+
+    <insert id="insertLog" parameterType="my.prac.core.baby.dto.BabyLogDto">
+        <selectKey keyProperty="logId" resultType="int" order="BEFORE">
+            SELECT TBABY_LOG_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO TBABY_LOG (
+            LOG_ID, BABY_ID, LOG_TYPE, START_AT, END_AT, ML, DETAIL,
+            WEIGHT_KG, HEIGHT_CM, HEAD_CM, TEMP_C, MEMO, CREATED_BY, CREATED_AT, IS_HIDDEN
+        ) VALUES (
+            #{logId}, #{babyId}, #{logType}, TO_DATE(#{startAt}, 'YYYY-MM-DD HH24:MI'),
+            TO_DATE(#{endAt, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI'),
+            #{ml, jdbcType=NUMERIC}, #{detail, jdbcType=VARCHAR},
+            #{weightKg, jdbcType=NUMERIC}, #{heightCm, jdbcType=NUMERIC}, #{headCm, jdbcType=NUMERIC},
+            #{tempC, jdbcType=NUMERIC}, #{memo, jdbcType=VARCHAR}, #{createdBy}, SYSDATE, 0
+        )
+    </insert>
+
+    <update id="updateLog" parameterType="my.prac.core.baby.dto.BabyLogDto">
+        UPDATE TBABY_LOG SET
+            LOG_TYPE   = #{logType},
+            START_AT   = TO_DATE(#{startAt}, 'YYYY-MM-DD HH24:MI'),
+            END_AT     = TO_DATE(#{endAt, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI'),
+            ML         = #{ml, jdbcType=NUMERIC},
+            DETAIL     = #{detail, jdbcType=VARCHAR},
+            WEIGHT_KG  = #{weightKg, jdbcType=NUMERIC},
+            HEIGHT_CM  = #{heightCm, jdbcType=NUMERIC},
+            HEAD_CM    = #{headCm, jdbcType=NUMERIC},
+            TEMP_C     = #{tempC, jdbcType=NUMERIC},
+            MEMO       = #{memo, jdbcType=VARCHAR}
+        WHERE LOG_ID = #{logId} AND BABY_ID = #{babyId} AND IS_HIDDEN = 0
+    </update>
+
+    <update id="hideLog">
+        UPDATE TBABY_LOG SET IS_HIDDEN = 1 WHERE LOG_ID = #{logId} AND BABY_ID = #{babyId}
+    </update>
+
+</mapper>

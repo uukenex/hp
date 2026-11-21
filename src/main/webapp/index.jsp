@@ -79,6 +79,11 @@
       <div class="label">캘린더 D-day</div>
       <div class="desc">기념일 / 생일 알림</div>
     </a>
+    <a href="<%=request.getContextPath()%>/baby/main" class="card">
+      <span class="icon">&#x1F476;</span>
+      <div class="label">아기 기록</div>
+      <div class="desc">수유 / 수면 / 기저귀</div>
+    </a>
     <!--
     <a href="<%=request.getContextPath()%>/bom/invite" class="card">
       <span class="icon">&#x1F490;</span>
