@@ -844,14 +844,22 @@ function registerSW() {
   if (!('serviceWorker' in navigator)) return Promise.reject(new Error('no sw'));
   return navigator.serviceWorker.register(CTX + '/baby/sw.js', { scope: CTX + '/baby/' }).then(function() { return navigator.serviceWorker.ready; });
 }
+function unsupportedHelp() {
+  var ua = navigator.userAgent || '';
+  if (/KAKAOTALK|NAVER|FBAN|FBAV|Instagram/i.test(ua)) return '카카오톡 등 앱 안의 브라우저에서는 알림을 켤 수 없습니다.\n메뉴(⋮)에서 "다른 브라우저로 열기"를 눌러 Chrome 또는 삼성 인터넷에서 열어 주세요.';
+  if (/iPhone|iPad|iPod/i.test(ua)) return '아이폰은 Safari에서 [공유] → [홈 화면에 추가]로 앱을 설치한 뒤,\n홈 화면의 앱을 열어서 알림 켜기를 눌러 주세요. (iOS 16.4 이상)';
+  return '이 브라우저는 알림을 지원하지 않습니다.\nChrome 또는 삼성 인터넷으로 열어 주세요.';
+}
 function initPush() {
+  document.getElementById('bell').style.display = 'inline-block';   // 지원 안 되는 기기에서도 버튼은 보이고 이유를 안내
+  if (!pushSupported()) return;
   registerSW().then(function(reg) {
-    if (!pushSupported()) return;
-    document.getElementById('bell').style.display = 'inline-block';
     return reg.pushManager.getSubscription().then(function(sub) { pushSub = sub; updateBell(); });
   }).catch(function() {});
 }
 function togglePush() {
+  if (!pushSupported()) { alert(unsupportedHelp()); return; }
+  if (!pushSub && Notification.permission === 'denied') { alert('이 사이트의 알림이 차단되어 있습니다.\n주소창 왼쪽 자물쇠(또는 설정) → 권한 → 알림을 "허용"으로 바꾼 뒤 다시 눌러 주세요.'); return; }
   if (pushSub) {
     if (!confirm('이 기기의 알림을 끌까요?')) return;
     var ep = pushSub.endpoint;
@@ -870,7 +878,7 @@ function togglePush() {
         return post('/baby/push/test', {});
       });
     });
-  }).catch(function() { alert('알림 설정에 실패했습니다. (HTTPS 접속인지 확인해 주세요)'); });
+  }).catch(function(err) { alert('알림 설정에 실패했습니다.\n(' + ((err && err.message) || err) + ')'); });
 }
 
 /* ===== 냉장고에 두고 쓸 때: 자동 새로고침 / 화면 켜두기 ===== */
