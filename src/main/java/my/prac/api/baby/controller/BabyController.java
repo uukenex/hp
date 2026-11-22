@@ -204,7 +204,7 @@ public class BabyController {
     public ResponseEntity<Map<String, Object>> deleteLog(@RequestBody Map<String, Object> body, HttpSession session) {
         int babyId = num(body, "babyId");
         if (!babyService.isMember(babyId, kakaoId(session))) return status(HttpStatus.FORBIDDEN);
-        babyService.deleteLog(num(body, "logId"), babyId);
+        babyService.deleteLog(num(body, "logId"), babyId, kakaoId(session));
         return ok(babyService.mapOf("ok", true));
     }
 
@@ -333,10 +333,13 @@ public class BabyController {
         + "self.addEventListener('push', function(e) {\n"
         + "  var d = {};\n"
         + "  try { d = e.data.json(); } catch (x) { d = { title: '아기 기록', body: e.data ? e.data.text() : '' }; }\n"
-        + "  e.waitUntil(self.registration.showNotification(d.title || '아기 기록', {\n"
+        + "  var tell = self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(list) {\n"
+        + "    list.forEach(function(c) { c.postMessage({ type: 'baby-sync' }); });\n"   // 열려 있는 화면은 즉시 갱신
+        + "  }).catch(function() {});\n"
+        + "  e.waitUntil(Promise.all([tell, self.registration.showNotification(d.title || '아기 기록', {\n"
         + "    body: d.body || '', icon: d.icon || 'icon/192.png', badge: 'icon/192.png',\n"
         + "    tag: d.tag || 'baby', data: { url: d.url || 'main' }\n"
-        + "  }));\n"
+        + "  })]));\n"
         + "});\n"
         + "self.addEventListener('notificationclick', function(e) {\n"
         + "  e.notification.close();\n"

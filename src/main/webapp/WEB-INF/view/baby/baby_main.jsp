@@ -147,7 +147,7 @@
   </div>
   <select id="babySel" style="display:none;"></select>
   <button type="button" id="bell" class="bell" style="display:none;" onclick="togglePush()">🔕 알림</button>
-  <a class="home" href="${pageContext.request.contextPath}/">홈</a>
+  <a class="home" href="${pageContext.request.contextPath}/baby/main">홈</a>
 </div>
 
 <div class="wrap">
@@ -896,6 +896,14 @@ document.addEventListener('keydown', function(e) { if (e.key === 'Escape') close
 // 화면으로 돌아왔을 때 다른 보호자의 기록을 반영
 document.addEventListener('visibilitychange', function() { if (!document.hidden && state.baby && state.tab === 'today') loadDay(); });
 
+// 다른 보호자가 등록/수정/삭제하면 푸시 도착 시 바로 화면 갱신 (서비스워커가 알려줌)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', function(e) {
+    if (!e.data || e.data.type !== 'baby-sync' || !state.baby) return;
+    if (document.getElementById('sheetBg').classList.contains('show')) return;
+    if (state.tab === 'today') loadDay();
+  });
+}
 reloadBabies().catch(function() { toast('불러오지 못했습니다. 새로고침해 주세요.'); }).then(hideLoading);
 initPush();
 </script>

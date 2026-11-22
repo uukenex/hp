@@ -241,8 +241,13 @@ public class BabyService {
         return null;
     }
 
-    public boolean deleteLog(int logId, int babyId) {
-        return dao.hideLog(logId, babyId) > 0;
+    public boolean deleteLog(int logId, int babyId, String me) {
+        BabyLogDto before = dao.getLog(logId);
+        boolean ok = dao.hideLog(logId, babyId) > 0;
+        if (ok && before != null && before.getBabyId() == babyId) {
+            try { sendToMembers(babyId, me, typeLabel(before.getLogType()) + " 기록을 삭제했어요"); } catch (Exception e) { logger.warn("삭제 알림 실패", e); }
+        }
+        return ok;
     }
 
     // ===== 일일 요약 =====
@@ -383,11 +388,12 @@ public class BabyService {
                     live = Duration.between(parse(d.getStartAt()), now).toMinutes() <= LIVE_WINDOW_MIN;
                     text = "아기가 잠들었어요 (" + parse(d.getStartAt()).toLocalTime() + ")";
                 } else {
-                    return;
+                    text = "수면 기록을 수정했어요";
+                    live = true;
                 }
                 if (!live) return;
             } else {
-                if (before != null) return;   // 수정은 알리지 않음
+                if (before != null) { sendToMembers(d.getBabyId(), me, typeLabel(type) + " 기록을 수정했어요"); return; }   // 다른 기기 화면 동기화 겸 알림
                 live = Duration.between(parse(d.getStartAt()), now).toMinutes() <= LIVE_WINDOW_MIN;
                 if (!live) return;
                 LocalTime t = parse(d.getStartAt()).toLocalTime();
@@ -400,18 +406,35 @@ public class BabyService {
                 else if ("GROWTH".equals(type)) text = "성장을 기록했어요 (" + growthText(d) + ")";
                 else return;
             }
-            BabyDto baby = dao.getBaby(d.getBabyId());
-            if (baby == null) return;
-            BabyMemberDto actor = dao.getMember(d.getBabyId(), me);
-            String who = actor == null ? "" : (actor.getRelation() != null ? actor.getRelation() : actor.getNickname());
-            String body = (who == null || who.isEmpty() ? "" : "[" + who + "] ") + text;   // 조사 문제를 피하려고 대괄호 표기
-            for (BabyMemberDto m : dao.getMembers(d.getBabyId())) {
-                if (!"Y".equals(m.getNotifyActivity())) continue;   // 등록한 본인 기기에도 알림 (확인용)
-                pushService.sendToUserApp(m.getKakaoId(), APP, "BABY", "👶 " + baby.getName(), body, "main", "icon/192.png",
-                        "baby-" + d.getBabyId() + "-" + System.currentTimeMillis());
-            }
+            sendToMembers(d.getBabyId(), me, text);
         } catch (Exception e) {
             logger.warn("보호자 알림 실패", e);   // 알림 실패가 기록 저장에 영향을 주지 않도록
+        }
+    }
+
+    private static String typeLabel(String t) {
+        if ("FORMULA".equals(t)) return "분유";
+        if ("BREAST".equals(t)) return "모유";
+        if ("SOLID".equals(t)) return "이유식";
+        if ("SLEEP".equals(t)) return "수면";
+        if ("DIAPER".equals(t)) return "기저귀";
+        if ("GROWTH".equals(t)) return "성장";
+        if ("TEMP".equals(t)) return "체온";
+        if ("MEDICINE".equals(t)) return "투약";
+        return "";
+    }
+
+    /** 활동 알림을 켠 보호자 모두에게 발송 (앱이 열려 있는 기기는 알림과 함께 화면도 즉시 갱신) */
+    private void sendToMembers(int babyId, String me, String text) {
+        BabyDto baby = dao.getBaby(babyId);
+        if (baby == null) return;
+        BabyMemberDto actor = dao.getMember(babyId, me);
+        String who = actor == null ? "" : (actor.getRelation() != null ? actor.getRelation() : actor.getNickname());
+        String body = (who == null || who.isEmpty() ? "" : "[" + who + "] ") + text;   // 조사 문제를 피하려고 대괄호 표기
+        for (BabyMemberDto m : dao.getMembers(babyId)) {
+            if (!"Y".equals(m.getNotifyActivity())) continue;
+            pushService.sendToUserApp(m.getKakaoId(), APP, "BABY", "👶 " + baby.getName(), body, "main", "icon/192.png",
+                    "baby-" + babyId + "-" + System.currentTimeMillis());
         }
     }
 
