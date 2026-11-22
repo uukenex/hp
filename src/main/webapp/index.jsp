@@ -81,7 +81,7 @@
     </a>
     <a href="<%=request.getContextPath()%>/baby/main" class="card">
       <span class="icon">&#x1F476;</span>
-      <div class="label">아기 기록</div>
+      <div class="label">시루노트</div>
       <div class="desc">수유 / 수면 / 기저귀</div>
     </a>
     <!--

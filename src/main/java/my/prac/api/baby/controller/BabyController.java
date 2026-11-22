@@ -254,7 +254,7 @@ public class BabyController {
     public Map<String, Object> pushTest(HttpSession session) {
         Map<String, Object> res = new HashMap<String, Object>();
         String me = kakaoId(session);
-        int n = me == null ? 0 : pushService.sendToUserApp(me, APP, "BABY_TEST", "👶 아기 기록 테스트 알림", "알림이 정상적으로 도착했습니다.",
+        int n = me == null ? 0 : pushService.sendToUserApp(me, APP, "BABY_TEST", "👶 시루노트 테스트 알림", "알림이 정상적으로 도착했습니다.",
                 "main", "icon/192.png", "baby-test");
         res.put("devices", n);
         return res;
@@ -321,7 +321,7 @@ public class BabyController {
     // ===== PWA 리소스 (로그인 없이 접근 가능해야 함: 인터셉터 제외 대상) =====
 
     private static final String MANIFEST =
-        "{\"id\":\"/baby/\",\"name\":\"아기 기록\",\"short_name\":\"아기기록\",\"start_url\":\"main\",\"scope\":\"./\","
+        "{\"id\":\"/baby/\",\"name\":\"시루노트\",\"short_name\":\"시루노트\",\"start_url\":\"main\",\"scope\":\"./\","
         + "\"display\":\"standalone\",\"background_color\":\"#fff5f7\",\"theme_color\":\"#ED93B1\","
         + "\"icons\":[{\"src\":\"icon/192.png\",\"sizes\":\"192x192\",\"type\":\"image/png\",\"purpose\":\"any maskable\"},"
         + "{\"src\":\"icon/512.png\",\"sizes\":\"512x512\",\"type\":\"image/png\",\"purpose\":\"any maskable\"}]}";
@@ -332,11 +332,11 @@ public class BabyController {
         + "self.addEventListener('fetch', function(e){});\n"
         + "self.addEventListener('push', function(e) {\n"
         + "  var d = {};\n"
-        + "  try { d = e.data.json(); } catch (x) { d = { title: '아기 기록', body: e.data ? e.data.text() : '' }; }\n"
+        + "  try { d = e.data.json(); } catch (x) { d = { title: '시루노트', body: e.data ? e.data.text() : '' }; }\n"
         + "  var tell = self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(list) {\n"
         + "    list.forEach(function(c) { c.postMessage({ type: 'baby-sync' }); });\n"   // 열려 있는 화면은 즉시 갱신
         + "  }).catch(function() {});\n"
-        + "  e.waitUntil(Promise.all([tell, self.registration.showNotification(d.title || '아기 기록', {\n"
+        + "  e.waitUntil(Promise.all([tell, self.registration.showNotification(d.title || '시루노트', {\n"
         + "    body: d.body || '', icon: d.icon || 'icon/192.png', badge: 'icon/192.png',\n"
         + "    tag: d.tag || 'baby', data: { url: d.url || 'main' }\n"
         + "  })]));\n"

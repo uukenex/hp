@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>아기 기록</title>
+<title>시루노트</title>
 <link rel="manifest" href="${pageContext.request.contextPath}/baby/manifest.json">
 <meta name="theme-color" content="#ED93B1">
 <link rel="icon" href="${pageContext.request.contextPath}/baby/icon/192.png">
@@ -141,7 +141,7 @@
 
 <div class="top">
   <div class="who">
-    <div class="nm" id="babyName">아기 기록</div>
+    <div class="nm" id="babyName">시루노트</div>
     <div class="age" id="babyAge"></div>
     <div class="me" id="meBadge"></div>
   </div>
@@ -259,7 +259,7 @@ function ageText(birth, today) {
 }
 function paintHeader() {
   var b = state.baby;
-  document.getElementById('babyName').textContent = b ? b.name : '아기 기록';
+  document.getElementById('babyName').textContent = b ? b.name : '시루노트';
   document.getElementById('babyAge').textContent = b ? ageText(b.birthDate, state.today) : '';
   var who = (b && b.relation ? b.relation + ' ' : '') + (state.meName ? '(' + state.meName + ')' : '');
   document.getElementById('meBadge').textContent = who.trim() ? '👤 접속: ' + who.trim() : '';
@@ -882,13 +882,13 @@ function applyWakeLock() {
   if (wakeLock || document.hidden) return;
   navigator.wakeLock.request('screen').then(function(l) { wakeLock = l; l.addEventListener('release', function() { wakeLock = null; }); }).catch(function() {});
 }
-// 1분마다: 날짜가 바뀌었으면 오늘로 갱신, 아니면 다른 보호자의 기록을 반영 (입력창이 열려 있으면 건너뜀)
+// 15초마다: 날짜가 바뀌었으면 오늘로 갱신, 아니면 다른 보호자의 기록을 반영 (입력창이 열려 있으면 건너뜀)
 setInterval(function() {
   if (document.hidden || !state.baby) return;
   if (document.getElementById('sheetBg').classList.contains('show')) return;
   if (ymd(new Date()) !== state.today) { reloadBabies(); return; }
   if (state.tab === 'today') loadDay();
-}, 60000);
+}, 15000);
 document.addEventListener('visibilitychange', applyWakeLock);
 applyWakeLock();
 
