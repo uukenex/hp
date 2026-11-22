@@ -406,7 +406,7 @@ public class BabyService {
             String who = actor == null ? "" : (actor.getRelation() != null ? actor.getRelation() : actor.getNickname());
             String body = (who == null || who.isEmpty() ? "" : "[" + who + "] ") + text;   // 조사 문제를 피하려고 대괄호 표기
             for (BabyMemberDto m : dao.getMembers(d.getBabyId())) {
-                if (m.getKakaoId().equals(me) || !"Y".equals(m.getNotifyActivity())) continue;
+                if (!"Y".equals(m.getNotifyActivity())) continue;   // 등록한 본인 기기에도 알림 (확인용)
                 pushService.sendToUserApp(m.getKakaoId(), APP, "BABY", "👶 " + baby.getName(), body, "main", "icon/192.png",
                         "baby-" + d.getBabyId() + "-" + System.currentTimeMillis());
             }
