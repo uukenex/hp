@@ -869,7 +869,11 @@ function togglePush() {
     return;
   }
   Notification.requestPermission().then(function(perm) {
-    if (perm !== 'granted') { alert('알림 권한이 허용되지 않았습니다.\n브라우저(사이트) 설정에서 알림을 허용해 주세요.'); return; }
+    if (perm !== 'granted') {
+      toast('알림 권한 결과: ' + perm);
+      alert('알림 권한이 허용되지 않았습니다. (' + perm + ')\n권한 팝업이 뜨지 않았다면, 폰 설정 → 앱 → 시루노트(또는 Chrome) → 알림을 "허용"으로 바꾼 뒤 앱을 다시 열어 눌러 주세요.');
+      return;
+    }
     return registerSW().then(function(reg) {
       return api('/baby/push/key').then(function(r) {
         var opt = { userVisibleOnly: true, applicationServerKey: b64ToU8(r.key) };
