@@ -26,14 +26,14 @@
             AUTO_LOGIN_TOKEN, TOKEN_EXPIRE, LAST_LOGIN, INSERT_DATE
         ) VALUES (
             TCAR_USER_KAKAO_SEQ.NEXTVAL,
-            #{kakaoId}, #{nickname}, #{profileImage},
+            #{kakaoId}, #{nickname, typeHandler=my.prac.core.car.dao.NStringTypeHandler}, #{profileImage},
             #{autoLoginToken}, SYSDATE + 30, SYSDATE, SYSDATE
         )
     </insert>
 
     <update id="updateLogin" parameterType="my.prac.core.car.dto.TuserKakaoDto">
         UPDATE TCAR_USER_KAKAO SET
-            NICKNAME         = #{nickname},
+            NICKNAME         = #{nickname, typeHandler=my.prac.core.car.dao.NStringTypeHandler},
             PROFILE_IMAGE    = #{profileImage},
             AUTO_LOGIN_TOKEN = #{autoLoginToken},
             TOKEN_EXPIRE     = SYSDATE + 30,
