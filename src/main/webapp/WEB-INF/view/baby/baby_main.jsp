@@ -247,6 +247,9 @@ function post(url, body) { return api(url, { method: 'POST', headers: { 'Content
 /* ===== 아기 정보 ===== */
 function ageText(birth, today) {
   var b = parseYmd(birth), t = parseYmd(today);
+  var diff = Math.round((b - t) / 86400000);
+  if (diff > 0) return '출산 예정일 D-' + diff;      // 아직 태어나기 전
+  if (diff === 0) return '출산 예정일 D-DAY';
   var days = Math.round((t - b) / 86400000) + 1;   // 태어난 날을 1일로
   var months = (t.getFullYear() - b.getFullYear()) * 12 + (t.getMonth() - b.getMonth());
   if (t.getDate() < b.getDate()) months--;
@@ -705,7 +708,7 @@ function renderSettings() {
   var rm = document.createElement('select');
   [[0, '끄기'], [1.5, '1시간 30분'], [2, '2시간'], [2.5, '2시간 30분'], [3, '3시간'], [3.5, '3시간 30분'], [4, '4시간'], [5, '5시간'], [6, '6시간']].forEach(function(o) { var op = document.createElement('option'); op.value = o[0]; op.textContent = o[1]; rm.appendChild(op); });
   rm.value = String(b.feedRemindHours || 0); rm.disabled = !owner;
-  field(c1, '이름', nm); field(c1, '생년월일', bd); field(c1, '성별', gd); field(c1, '수유 간격 알림 (마지막 수유 후)', rm);
+  field(c1, '이름', nm); field(c1, '생년월일 (출산 예정일도 가능)', bd); field(c1, '성별', gd); field(c1, '수유 간격 알림 (마지막 수유 후)', rm);
   var e1 = el('div', 'err'); c1.appendChild(e1);
   if (owner) c1.appendChild(btn('저장', 'btn primary wide', function() {
     showLoading();
@@ -773,7 +776,7 @@ function showOnboard(canCancel) {
   var bd = document.createElement('input'); bd.type = 'date'; bd.value = state.today || ymd(new Date());
   var gd = document.createElement('select'); [['', '선택 안 함'], ['F', '여아'], ['M', '남아']].forEach(function(o) { var op = document.createElement('option'); op.value = o[0]; op.textContent = o[1]; gd.appendChild(op); });
   var rl = document.createElement('input'); rl.type = 'text'; rl.maxLength = 20; rl.placeholder = '예) 엄마, 아빠';
-  field(c1, '이름', nm); field(c1, '생년월일', bd); field(c1, '성별', gd); field(c1, '나의 호칭', rl);
+  field(c1, '이름', nm); field(c1, '생년월일 (출산 예정일도 가능)', bd); field(c1, '성별', gd); field(c1, '나의 호칭', rl);
   var e1 = el('div', 'err'); c1.appendChild(e1);
   c1.appendChild(btn('아기 등록하기', 'btn primary wide', function() {
     showLoading();

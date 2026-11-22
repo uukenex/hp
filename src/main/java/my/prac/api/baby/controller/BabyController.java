@@ -300,7 +300,7 @@ public class BabyController {
     private static boolean validBirth(String s) {
         try {
             LocalDate d = LocalDate.parse(s);
-            return d.getYear() >= 2000 && !d.isAfter(LocalDate.now(BabyService.ZONE).plusDays(1));
+            return d.getYear() >= 2000 && !d.isAfter(LocalDate.now(BabyService.ZONE).plusYears(1));   // 출산 예정일(미래) 허용
         } catch (Exception e) {
             return false;
         }
