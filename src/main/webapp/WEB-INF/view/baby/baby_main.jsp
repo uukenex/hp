@@ -859,6 +859,7 @@ function initPush() {
 }
 function togglePush() {
   if (!pushSupported()) { alert(unsupportedHelp()); return; }
+  toast('알림 상태 확인 중… (권한: ' + Notification.permission + ', 구독: ' + (pushSub ? '있음' : '없음') + ')');
   if (!pushSub && Notification.permission === 'denied') { alert('이 사이트의 알림이 차단되어 있습니다.\n주소창 왼쪽 자물쇠(또는 설정) → 권한 → 알림을 "허용"으로 바꾼 뒤 다시 눌러 주세요.'); return; }
   if (pushSub) {
     if (!confirm('이 기기의 알림을 끌까요?')) return;
@@ -870,15 +871,22 @@ function togglePush() {
   Notification.requestPermission().then(function(perm) {
     if (perm !== 'granted') { alert('알림 권한이 허용되지 않았습니다.\n브라우저(사이트) 설정에서 알림을 허용해 주세요.'); return; }
     return registerSW().then(function(reg) {
-      return api('/baby/push/key').then(function(r) { return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToU8(r.key) }); });
+      return api('/baby/push/key').then(function(r) {
+        var opt = { userVisibleOnly: true, applicationServerKey: b64ToU8(r.key) };
+        return reg.pushManager.getSubscription().then(function(old) {
+          if (!old) return reg.pushManager.subscribe(opt);
+          return old.unsubscribe().catch(function() {}).then(function() { return reg.pushManager.subscribe(opt); });   // 예전 구독이 남아 있으면 새로 만듦
+        });
+      });
     }).then(function(sub) {
       return post('/baby/push/subscribe', sub.toJSON()).then(function(r) {
         if (!r.ok) throw new Error('subscribe failed');
         pushSub = sub; updateBell();
+        toast('알림이 켜졌습니다. 테스트 알림을 보냅니다.');
         return post('/baby/push/test', {});
       });
     });
-  }).catch(function(err) { alert('알림 설정에 실패했습니다.\n(' + ((err && err.message) || err) + ')'); });
+  }).catch(function(err) { var m = (err && err.message) || String(err); toast('알림 설정 실패: ' + m); alert('알림 설정에 실패했습니다.\n(' + m + ')'); });
 }
 
 /* ===== 냉장고에 두고 쓸 때: 자동 새로고침 / 화면 켜두기 ===== */
