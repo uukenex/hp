@@ -322,7 +322,7 @@ public class BabyController {
 
     private static final String MANIFEST =
         "{\"id\":\"/baby/\",\"name\":\"시루노트\",\"short_name\":\"시루노트\",\"start_url\":\"main\",\"scope\":\"./\","
-        + "\"display\":\"standalone\",\"background_color\":\"#fff5f7\",\"theme_color\":\"#ED93B1\","
+        + "\"display\":\"standalone\",\"background_color\":\"#17121a\",\"theme_color\":\"#17121a\","
         + "\"icons\":[{\"src\":\"icon/192.png\",\"sizes\":\"192x192\",\"type\":\"image/png\",\"purpose\":\"any maskable\"},"
         + "{\"src\":\"icon/512.png\",\"sizes\":\"512x512\",\"type\":\"image/png\",\"purpose\":\"any maskable\"}]}";
 

@@ -6,22 +6,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>시루노트</title>
 <link rel="manifest" href="${pageContext.request.contextPath}/baby/manifest.json">
-<meta name="theme-color" content="#ED93B1">
+<meta name="theme-color" content="#17121a">
+<meta name="color-scheme" content="dark">
 <link rel="icon" href="${pageContext.request.contextPath}/baby/icon/192.png">
 <style>
+  /* 밤중 수유 때 눈부시지 않도록 폰 설정과 상관없이 항상 어두운 화면 */
   :root {
-    --bg: #fff8fa; --card: #ffffff; --line: #f0dfe5; --text: #2d2327; --sub: #8a7a81;
-    --accent: #D4537E; --accent-soft: #FBEAF0; --accent-text: #72243E;
-    --blue: #378ADD; --blue-soft: #E6F1FB; --amber-soft: #FAEEDA; --amber: #854F0B; --green-soft: #E1F5EE; --green: #0F6E56;
-    --danger: #c62828; --overlay: rgba(0,0,0,0.5);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #17121a; --card: #231b27; --line: #3a2f40; --text: #f3e9ee; --sub: #a99aa3;
-      --accent: #ED93B1; --accent-soft: #3d2230; --accent-text: #f8cfe0;
-      --blue: #85B7EB; --blue-soft: #1d2d40; --amber-soft: #3a2d17; --amber: #FAC775; --green-soft: #12332b; --green: #5DCAA5;
-      --danger: #ef9a9a; --overlay: rgba(0,0,0,0.7);
-    }
+    color-scheme: dark;
+    --bg: #17121a; --card: #231b27; --line: #3a2f40; --text: #f3e9ee; --sub: #a99aa3;
+    --accent: #ED93B1; --accent-soft: #3d2230; --accent-text: #f8cfe0;
+    --blue: #85B7EB; --blue-soft: #1d2d40; --amber-soft: #3a2d17; --amber: #FAC775; --green-soft: #12332b; --green: #5DCAA5;
+    --danger: #ef9a9a; --overlay: rgba(0,0,0,0.7);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body { font-family: 'Apple SD Gothic Neo','Malgun Gothic', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
