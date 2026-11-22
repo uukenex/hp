@@ -179,7 +179,7 @@
         <button type="button" onclick="openSheet('BREAST')"><span class="ic">🤱</span>모유</button>
         <button type="button" onclick="openSheet('SOLID')"><span class="ic">🥣</span>이유식</button>
         <button type="button" onclick="openSheet('SLEEP')"><span class="ic" id="sleepIc">😴</span><span id="sleepBtnTxt">수면</span></button>
-        <button type="button" onclick="openSheet('DIAPER')"><span class="ic">🧷</span>기저귀</button>
+        <button type="button" onclick="openSheet('DIAPER')"><span class="ic">🩲</span>기저귀</button>
         <button type="button" onclick="openSheet('GROWTH')"><span class="ic">📏</span>성장</button>
         <button type="button" onclick="openSheet('TEMP')"><span class="ic">🌡️</span>체온</button>
         <button type="button" onclick="openSheet('MEDICINE')"><span class="ic">💊</span>투약</button>
@@ -204,7 +204,7 @@ var CTX = '${pageContext.request.contextPath}';
 var DOW = ['일', '월', '화', '수', '목', '금', '토'];
 var TYPES = {
   FORMULA: { ic: '🍼', name: '분유' }, BREAST: { ic: '🤱', name: '모유' }, SOLID: { ic: '🥣', name: '이유식' },
-  SLEEP: { ic: '😴', name: '수면' }, DIAPER: { ic: '🧷', name: '기저귀' }, GROWTH: { ic: '📏', name: '성장' },
+  SLEEP: { ic: '😴', name: '수면' }, DIAPER: { ic: '🩲', name: '기저귀' }, GROWTH: { ic: '📏', name: '성장' },
   TEMP: { ic: '🌡️', name: '체온' }, MEDICINE: { ic: '💊', name: '투약' }
 };
 

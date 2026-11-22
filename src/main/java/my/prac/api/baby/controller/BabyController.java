@@ -337,7 +337,7 @@ public class BabyController {
         + "    list.forEach(function(c) { c.postMessage({ type: 'baby-sync' }); });\n"   // 열려 있는 화면은 즉시 갱신
         + "  }).catch(function() {});\n"
         + "  e.waitUntil(Promise.all([tell, self.registration.showNotification(d.title || '시루노트', {\n"
-        + "    body: d.body || '', icon: d.icon || 'icon/192.png', badge: 'icon/192.png',\n"
+        + "    body: d.body || '', icon: d.icon || 'icon/192.png', badge: 'icon/badge.png',\n"
         + "    tag: d.tag || 'baby', data: { url: d.url || 'main' }\n"
         + "  })]));\n"
         + "});\n"
@@ -370,6 +370,33 @@ public class BabyController {
     @GetMapping("/icon/512.png")
     public void icon512(HttpServletResponse res) throws IOException {
         write(res, "image/png", appIcon(512), true);
+    }
+
+    /** 안드로이드 상태표시줄용 알림 아이콘(배지). 투명 배경 + 흰색 젖병 모양이어야 네모로 보이지 않음 */
+    @GetMapping("/icon/badge.png")
+    public void badge(HttpServletResponse res) throws IOException {
+        write(res, "image/png", badgeIcon(96), true);
+    }
+
+    private byte[] badgeIcon(int size) throws IOException {
+        System.setProperty("java.awt.headless", "true");
+        BufferedImage img = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = img.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        double u = size / 100.0;
+        g.setColor(Color.WHITE);
+        g.fill(new Ellipse2D.Double(41 * u, 4 * u, 18 * u, 18 * u));                                       // 젖꼭지
+        g.fill(new java.awt.geom.Rectangle2D.Double(44 * u, 13 * u, 12 * u, 11 * u));
+        g.fill(new java.awt.geom.RoundRectangle2D.Double(32 * u, 22 * u, 36 * u, 11 * u, 5 * u, 5 * u));    // 뚜껑
+        g.fill(new java.awt.geom.RoundRectangle2D.Double(29 * u, 35 * u, 42 * u, 61 * u, 18 * u, 18 * u)); // 몸통
+        g.setComposite(java.awt.AlphaComposite.Clear);                                                     // 눈금은 투명하게 뚫음
+        for (int y : new int[] { 50, 62, 74 }) {
+            g.fill(new java.awt.geom.RoundRectangle2D.Double(36 * u, y * u, 14 * u, 4 * u, 4 * u, 4 * u));
+        }
+        g.dispose();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ImageIO.write(img, "png", out);
+        return out.toByteArray();
     }
 
     private void write(HttpServletResponse res, String type, byte[] body, boolean cache) throws IOException {
